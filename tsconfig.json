@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "preserve",
+    "types": ["node"],
     "noEmit": true,
     "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
