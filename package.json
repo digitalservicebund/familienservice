@@ -1,6 +1,7 @@
 {
   "name": "fs-prototype",
   "version": "0.0.1",
+  "private": true,
   "description": "Familienservice Prototype(s)",
   "license": "MIT",
   "author": "",
@@ -23,5 +24,8 @@
     "oxlint": "^1.87.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.4"
+  },
+  "engines": {
+    "node": "^26"
   }
 }
