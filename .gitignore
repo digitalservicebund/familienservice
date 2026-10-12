@@ -23,5 +23,8 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Dependencies
+node_modules/
+
 # npm run serve
 dist
