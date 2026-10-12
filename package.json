@@ -17,6 +17,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "start": "node src/server.ts",
+    "start:image": "docker run --init --rm -p 3000:3000 fs-prototype",
     "start:watch": "node --watch src/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
