@@ -17,6 +17,10 @@ jobs:
       PACKAGE_NAME: fs-prototype
       IMAGE_NAME: digitalservicebund/fs-prototype
     steps:
+      # TODO: Remove after testing the Slack notification
+      - name: Fail intentionally
+        run: exit 1
+
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
@@ -74,9 +78,9 @@ jobs:
       - name: Attest the vulnerability scan
         run: cosign attest --yes --replace --predicate ${{ env.PACKAGE_NAME }}-vulnerabilities.json --type vuln ghcr.io/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
-      # - name: Send failure to Slack
-      #   uses: digitalservicebund/notify-on-failure-gha@5973d82d62439ebd6f0cf73d6836e6a81782e419
-      #   if: ${{ failure() }}
-      #   with:
-      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      #     SLACK_CHANNEL_ID: <slack channel ID> # REPLACE ME
+      - name: Send failure to Slack
+        uses: digitalservicebund/notify-on-failure-gha@b8fdda76a38fa8e94cf623ebdd03e4570bc4ceb0
+        if: ${{ failure() }}
+        with:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: C0C4X5AEZBL
