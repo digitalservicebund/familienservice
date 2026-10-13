@@ -2,8 +2,8 @@ pre-commit:
   parallel: true
   jobs:
     - name: Lint
-      run: npm run lint:fix
+      run: pnpm lint:fix
       stage_fixed: true
     - name: Format
-      run: npm run format:fix
+      run: pnpm format:fix
       stage_fixed: true

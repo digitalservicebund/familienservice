@@ -3,8 +3,8 @@ FROM node:26-alpine
 ENV NODE_ENV=production
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm@12.11.2 && pnpm install --frozen-lockfile --prod
 
 COPY src ./src
 
