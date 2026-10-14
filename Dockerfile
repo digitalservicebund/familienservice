@@ -1,14 +1,20 @@
-FROM node:26-alpine
+FROM node:26-alpine AS build
 
-ENV NODE_ENV=production
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
 # NOTE: keep the pnpm version here in sync with the "packageManager" field in package.json
-RUN npm install -g pnpm@12.11.2 && pnpm install --frozen-lockfile --prod
+RUN npm install -g pnpm@12.11.2
 
-COPY src ./src
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY familienservice/package.json ./familienservice/
+RUN pnpm install --frozen-lockfile
 
-USER node
+COPY familienservice ./familienservice
+RUN pnpm --filter familienservice build
+
+FROM nginxinc/nginx-unprivileged:stable-alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/familienservice/dist /usr/share/nginx/html
+
 EXPOSE 3000
-CMD ["node", "src/server.ts"]
