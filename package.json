@@ -11,23 +11,19 @@
   },
   "type": "module",
   "scripts": {
+    "build": "pnpm --filter familienservice build",
     "build:image": "docker build -t fs-prototype .",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "start": "node src/server.ts",
+    "start": "pnpm --parallel --filter familienservice dev",
     "start:image": "docker run --init --rm -p 3000:3000 fs-prototype",
-    "start:watch": "node --watch src/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc"
-  },
-  "dependencies": {
-    "express": "^5.3.0"
+    "typecheck": "tsc -p familienservice"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "oxfmt": "^0.72.0",
     "oxlint": "^1.87.0",

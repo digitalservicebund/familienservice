@@ -2,16 +2,42 @@
 
 [very early stage]
 
+A prototype of the Familienservice platform and further microfrontends that together provide information about family benefits and direct users to the relevant external application channels.
+
+## Project structure
+
+This repository is a [pnpm workspace](https://pnpm.io/workspaces).
+
+- `familienservice/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and is currently what the Docker image serves (via nginx).
+
+Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the familienservice app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
+
 ## Getting started
 
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/en/download): Version 26 is required. We recommend installing it via [nvm](https://github.com/nvm-sh/nvm).
-- [pnpm](https://pnpm.io/installation): We use `pnpm` instead of `npm`. Installation instructions can be found in the pnpm docs.
+- [pnpm](https://pnpm.io/installation): Version 12.x is required. Installation instructions can be found in the pnpm docs.
 - [lefthook](https://lefthook.dev/install/): Runs linting and formatting as Git pre-commit hooks. Run `lefthook install` once to activate them.
 
-[Explain how to start the project after first checkout. Don't assume deep familiarity with the patterns of your eco-system!]
+### Installation
+
+Install the dependencies of all workspace packages from the repository root:
+
+```sh
+pnpm install
+```
 
 ## Usage
 
-[List the main entry-points of this project. This may include running a dev server, building, running tests or similar.]
+All commands are run from the repository root:
+
+| Command                           | Action                                                           |
+| :-------------------------------- | :--------------------------------------------------------------- |
+| `pnpm start`                      | Starts the familienservice dev server at `localhost:4321`        |
+| `pnpm build`                      | Builds the familienservice app to `./familienservice/dist/`      |
+| `pnpm build:image`                | Builds the Docker image                                          |
+| `pnpm start:image`                | Runs the Docker image at `localhost:3000`                        |
+| `pnpm lint` / `pnpm lint:fix`     | Lints the code with oxlint                                       |
+| `pnpm format` / `pnpm format:fix` | Checks / fixes formatting with oxfmt                             |
+| `pnpm typecheck`                  | Type-checks the familienservice app (`.ts` and `.js` files only) |
