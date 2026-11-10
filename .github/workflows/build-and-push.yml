@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+env:
+  INFRA_REPO: fs-infra
+
 jobs:
   build-and-push-image:
     needs: [] # Optionally require tests & other checks to be executed first
@@ -80,3 +83,22 @@ jobs:
         with:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: C0C4X5AEZBL
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment: staging
+    needs: build-and-push-image
+    steps:
+      - name: Deploy latest container image
+        uses: digitalservicebund/argocd-deploy@355b2c4b9d9191a5048c8307f13e1cfc05150387
+        with:
+          environment: staging
+          version: ${{ github.sha }}
+          deploying_repo: ${{ github.event.repository.name }}
+          infra_repo: ${{ env.INFRA_REPO }}
+          github_app_client_id: ${{ secrets.GITOPS_GITOPS_FAMILIENSERVICE_APP_PRIVATE_KEY_CLIENT_ID }}
+          github_app_private_key: ${{ secrets.GITOPS_FAMILIENSERVICE_APP_PRIVATE_KEY }}
+          app: familienservice
+          argocd_auth_token: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          argocd_server: ${{ secrets.ARGOCD_SERVER_STACKIT }}
