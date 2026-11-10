@@ -14,8 +14,8 @@ jobs:
       id-token: write # Required for identity challenge with sigstore/fulcio
       packages: write
     env:
-      PACKAGE_NAME: fs-prototype
-      IMAGE_NAME: digitalservicebund/fs-prototype
+      PACKAGE_NAME: familienservice
+      IMAGE_NAME: digitalservicebund/fs-prototype/familienservice
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
