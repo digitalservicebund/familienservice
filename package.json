@@ -7,7 +7,7 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digitalservicebund/familienservicegit"
+    "url": "git+https://github.com/digitalservicebund/familienservice.git"
   },
   "type": "module",
   "scripts": {
