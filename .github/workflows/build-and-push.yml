@@ -97,7 +97,7 @@ jobs:
         with:
           environment: staging
           version: ${{ github.sha }}
-          deploying_repo: ${{ github.event.repository.name }}
+          deploying_repo: familienservice # image name under ghcr.io/digitalservicebund/, not the repo name
           infra_repo: ${{ env.INFRA_REPO }}
           github_app_client_id: ${{ secrets.GITOPS_FAMILIENSERVICE_CLIENT_ID }}
           github_app_private_key: ${{ secrets.GITOPS_FAMILIENSERVICE_APP_PRIVATE_KEY }}
