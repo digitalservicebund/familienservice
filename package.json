@@ -1,5 +1,5 @@
 {
-  "name": "fs-prototype",
+  "name": "familienservice",
   "version": "0.0.1",
   "private": true,
   "description": "Familienservice Prototype(s)",
@@ -7,18 +7,18 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digitalservicebund/fs-prototype.git"
+    "url": "git+https://github.com/digitalservicebund/familienservicegit"
   },
   "type": "module",
   "scripts": {
     "build": "pnpm --filter familienservice build",
-    "build:image": "docker build -t fs-prototype .",
+    "build:image": "docker build -t familienservice .",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "start": "pnpm --parallel --filter familienservice dev",
-    "start:image": "docker run --init --rm -p 3000:3000 fs-prototype",
+    "start:image": "docker run --init --rm -p 3000:3000 familienservice",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p familienservice"
