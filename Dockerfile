@@ -10,7 +10,7 @@ COPY familienservice/package.json ./familienservice/
 RUN pnpm install --frozen-lockfile
 
 COPY familienservice ./familienservice
-RUN pnpm --filter familienservice build
+RUN pnpm --filter @familienservice/web build
 
 FROM nginxinc/nginx-unprivileged:stable-alpine
 
