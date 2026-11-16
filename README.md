@@ -9,6 +9,7 @@ A prototype of the Familienservice platform and further microfrontends that toge
 This repository is a [pnpm workspace](https://pnpm.io/workspaces).
 
 - `familienservice/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and is currently what the Docker image serves (via nginx).
+- `resources/familienportal/`: Content crawled from [familienportal.de](https://familienportal.de) as Markdown, used as the data basis for the prototype. See its [README](resources/familienportal/README.md) for details.
 
 Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the familienservice app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
 
