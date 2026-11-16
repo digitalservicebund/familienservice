@@ -13,15 +13,21 @@
   "scripts": {
     "build": "pnpm --filter @familienservice/web build",
     "build:image": "docker build -t familienservice .",
+    "cms:db": "pnpm --filter @familienservice/cms db:up",
+    "cms:db:stop": "pnpm --filter @familienservice/cms db:down",
+    "cms:dev": "pnpm --filter @familienservice/cms dev",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "start": "pnpm --parallel --filter @familienservice/web dev",
+    "start": "pnpm cms:db && pnpm run \"/^start:(cms|web)$/\"",
+    "start:cms": "pnpm cms:dev",
+    "start:web": "until curl -sf http://localhost:1337/_health > /dev/null; do sleep 1; done; STRAPI_URL=http://localhost:1337 pnpm web:dev",
     "start:image": "docker run --init --rm -p 3000:3000 familienservice",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p familienservice"
+    "typecheck": "tsc -p familienservice && pnpm --filter @familienservice/cms typecheck",
+    "web:dev": "pnpm --parallel --filter @familienservice/web dev"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

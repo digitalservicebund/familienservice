@@ -1,0 +1,27 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const leistungen = (await getCollection("familienleistungen")).sort((a, b) =>
+  a.data.titel.localeCompare(b.data.titel, "de"),
+);
+---
+
+<BaseLayout title="Familienleistungen">
+  <p><a href="/">Startseite</a></p>
+  <h1>Familienleistungen</h1>
+  {
+    leistungen.length === 0 ? (
+      <p>Es sind noch keine Familienleistungen veröffentlicht.</p>
+    ) : (
+      <ul>
+        {leistungen.map((leistung) => (
+          <li>
+            <a href={`/leistungen/${leistung.id}/`}>{leistung.data.titel}</a>
+            {leistung.data.beschreibung && <p>{leistung.data.beschreibung}</p>}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</BaseLayout>
