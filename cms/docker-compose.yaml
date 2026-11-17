@@ -1,6 +1,6 @@
 # Local PostgreSQL for the Strapi CMS.
 #
-# Start it with `pnpm cms:db` (repository root). Docker Compose reads the
+# Start it with `pnpm start:cms:db` (repository root). Docker Compose reads the
 # DATABASE_* variables from cms/.env (see cms/.env.example); values already set
 # in the environment take precedence.
 name: familienservice-cms

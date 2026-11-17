@@ -1,5 +1,5 @@
 packages:
-  - familienservice
+  - web
   - cms
 
 # Install scripts that may run (pnpm blocks all others). Needed by Strapi (cms).

@@ -1,7 +1,7 @@
 # Familienservice CMS (Strapi spike)
 
 A [Strapi 5](https://docs.strapi.io) instance to evaluate Strapi as the CMS for the Familienservice.
-Editors maintain content here; the Astro frontend in `../familienservice` fetches the published
+Editors maintain content here; the Astro frontend in `../web` fetches the published
 content at build time via the REST API.
 
 ## Getting started
@@ -21,18 +21,18 @@ cp -n cms/.env.example cms/.env
 # —> generate values with: `openssl rand -hex 32` (for example)
 
 
-pnpm cms:db     # start PostgreSQL (docker compose)
-pnpm cms:dev    # start Strapi at http://localhost:1337/admin (via op run)
+pnpm start:cms:db   # start PostgreSQL (docker compose)
+pnpm start:cms      # start Strapi at http://localhost:1337/admin (via op run)
 ```
 
 On the first start, Strapi asks you to create the first admin user. After that, create and
 **publish** a Familienleistung and build the frontend against Strapi:
 
 ```sh
-STRAPI_URL=http://localhost:1337 pnpm build   # or: STRAPI_URL=http://localhost:1337 pnpm web:dev
+STRAPI_URL=http://localhost:1337 pnpm build:web   # or the dev server: pnpm start:web
 ```
 
-`pnpm cms:db:stop` stops the database. The data stays in a Docker volume.
+`pnpm stop:cms:db` stops the database. The data stays in a Docker volume.
 
 To start everything at once, use `pnpm start`. It starts the database, then runs Strapi
 (`start:cms`) and the frontend dev server (`start:web`) in parallel. The frontend waits until
@@ -79,11 +79,11 @@ Changes compared to the generated project:
 - `cms/.env` is your local copy (`cp -n cms/.env.example cms/.env`) and ignored by Git. Adjust it
   locally as needed, e.g. the vault name or a port. When the example gains new variables, copy
   them over from `cms/.env.example`.
-- `pnpm cms:dev` runs `op run --env-file=.env -- strapi develop`. `op` resolves the references
+- `pnpm start:cms` runs `op run --env-file=.env -- strapi develop`. `op` resolves the references
   and passes the real values as environment variables to Strapi. Strapi also reads `.env` on its
   own, but values already present in the environment win. If Strapi is started without
   `op run`, `src/index.ts` aborts with a hint instead of using the `op://…` strings as secrets.
-- `pnpm cms:db` starts Docker Compose directly (without `op run`). Docker Compose reads the
+- `pnpm start:cms:db` starts Docker Compose directly (without `op run`). Docker Compose reads the
   `DATABASE_*` variables from `cms/.env` itself and does not resolve `op://` references.
 
 ### Database: PostgreSQL via Docker Compose
@@ -123,8 +123,8 @@ on their `find`/`findOne` routes.
 
 ### Connection to the frontend
 
-`familienservice/src/content.config.ts` defines the collection `familienleistungen` with the
-loader from `familienservice/src/lib/strapi-loader.ts`. It runs at build time (and when the dev
+`web/src/content.config.ts` defines the collection `familienleistungen` with the
+loader from `web/src/lib/strapi-loader.ts`. It runs at build time (and when the dev
 server starts), reads all published documents page by page and renders `inhalt` as Markdown.
 Without `STRAPI_URL`, or if Strapi is not reachable, it logs a warning and the collection stays
 empty, so CI and the Docker build work without a CMS.

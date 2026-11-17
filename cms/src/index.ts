@@ -22,7 +22,7 @@ function assertSecretsResolved() {
   if (unresolved.length > 0) {
     throw new Error(
       `Unresolved 1Password references in ${unresolved.join(", ")}. ` +
-        'Start Strapi via "pnpm cms:dev" (runs "op run --env-file=.env").',
+        'Start Strapi via "pnpm start:cms" (runs "op run --env-file=.env").',
     );
   }
 }

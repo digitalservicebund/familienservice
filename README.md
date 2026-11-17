@@ -8,10 +8,10 @@ A prototype of the Familienservice platform and further microfrontends that toge
 
 This repository is a [pnpm workspace](https://pnpm.io/workspaces).
 
-- `familienservice/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and is currently what the Docker image serves (via nginx).
-- `cms/`: A [Strapi](https://strapi.io) CMS (spike) with a local PostgreSQL. The familienservice app fetches its published content at build time when `STRAPI_URL` is set. See [cms/README.md](cms/README.md).
+- `web/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and is currently what the Docker image serves (via nginx).
+- `cms/`: A [Strapi](https://strapi.io) CMS (spike) with a local PostgreSQL. The web app fetches its published content at build time when `STRAPI_URL` is set. See [cms/README.md](cms/README.md).
 
-Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the familienservice app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
+Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the web app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
 
 ## Getting started
 
@@ -33,17 +33,17 @@ pnpm install
 
 All commands are run from the repository root:
 
-| Command                            | Action                                                                                                          |
-| :--------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| `pnpm start`                       | Starts everything: the CMS database, Strapi and then the familienservice dev server with content from Strapi    |
-| `pnpm web:dev`                     | Starts only the familienservice dev server at `localhost:4321` (without CMS content unless `STRAPI_URL` is set) |
-| `pnpm build`                       | Builds the familienservice app to `./familienservice/dist/`                                                     |
-| `pnpm build:image`                 | Builds the Docker image                                                                                         |
-| `pnpm start:image`                 | Runs the Docker image at `localhost:3000`                                                                       |
-| `pnpm lint` / `pnpm lint:fix`      | Lints the code with oxlint                                                                                      |
-| `pnpm format` / `pnpm format:fix`  | Checks / fixes formatting with oxfmt                                                                            |
-| `pnpm typecheck`                   | Type-checks the familienservice app (`.ts` and `.js` files only) and the CMS (with its own TypeScript 5)        |
-| `pnpm cms:db` / `pnpm cms:db:stop` | Starts / stops the CMS database (PostgreSQL via Docker Compose)                                                 |
-| `pnpm cms:dev`                     | Starts the Strapi CMS at `localhost:1337/admin`                                                                 |
-
-`pnpm start` and the `cms:*` commands additionally need Docker and the [1Password CLI](https://developer.1password.com/docs/cli/get-started/). Details: [cms/README.md](cms/README.md).
+| Command                                  | Action                                                                                       |
+| :--------------------------------------- | :------------------------------------------------------------------------------------------- |
+| `pnpm start`                             | Starts the CMS database, the CMS and the web dev server (see [cms/README.md](cms/README.md)) |
+| `pnpm start:web`                         | Waits for the CMS, then starts the web dev server at `localhost:4321`                        |
+| `pnpm start:cms`                         | Starts the Strapi CMS at `localhost:1337/admin` (via `op run`)                               |
+| `pnpm start:cms:db` / `pnpm stop:cms:db` | Starts / stops the CMS database (PostgreSQL via Docker Compose)                              |
+| `pnpm build`                             | Builds the web app and the CMS                                                               |
+| `pnpm build:web`                         | Builds the web app to `./web/dist/`, with CMS content if `STRAPI_URL` is set                 |
+| `pnpm build:cms`                         | Builds the CMS to `./cms/dist/`                                                              |
+| `pnpm build:web:image`                   | Builds the Docker image of the web app                                                       |
+| `pnpm start:web:image`                   | Runs the Docker image of the web app at `localhost:3000`                                     |
+| `pnpm lint` / `pnpm lint:fix`            | Lints the code with oxlint                                                                   |
+| `pnpm format` / `pnpm format:fix`        | Checks / fixes formatting with oxfmt                                                         |
+| `pnpm typecheck`                         | Type-checks the web app (`.ts` and `.js` files only) and the CMS                             |

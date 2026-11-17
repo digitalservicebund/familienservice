@@ -4,7 +4,7 @@ import { strapiLoader } from "./lib/strapi-loader";
 
 /**
  * Familienleistungen from the Strapi CMS (cms/). Set STRAPI_URL to load them,
- * e.g. `STRAPI_URL=http://localhost:1337 pnpm build`.
+ * e.g. `STRAPI_URL=http://localhost:1337 pnpm build:web`.
  */
 const familienleistungen = defineCollection({
   loader: strapiLoader({
