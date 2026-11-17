@@ -6,15 +6,15 @@ WORKDIR /app
 RUN npm install -g pnpm@12.11.2
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY familienservice/package.json ./familienservice/
+COPY web/package.json ./web/
 RUN pnpm install --frozen-lockfile
 
-COPY familienservice ./familienservice
+COPY web ./web
 RUN pnpm --filter @familienservice/web build
 
 FROM nginxinc/nginx-unprivileged:stable-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/familienservice/dist /usr/share/nginx/html
+COPY --from=build /app/web/dist /usr/share/nginx/html
 
 EXPOSE 3000
