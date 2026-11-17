@@ -8,9 +8,9 @@ A prototype of the Familienservice platform and further microfrontends that toge
 
 This repository is a [pnpm workspace](https://pnpm.io/workspaces).
 
-- `familienservice/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and is currently what the Docker image serves (via nginx).
+- `web/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and is currently what the Docker image serves (via nginx).
 
-Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the familienservice app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
+Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the web app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
 
 ## Getting started
 
@@ -32,12 +32,12 @@ pnpm install
 
 All commands are run from the repository root:
 
-| Command                           | Action                                                           |
-| :-------------------------------- | :--------------------------------------------------------------- |
-| `pnpm start`                      | Starts the familienservice dev server at `localhost:4321`        |
-| `pnpm build`                      | Builds the familienservice app to `./familienservice/dist/`      |
-| `pnpm build:image`                | Builds the Docker image                                          |
-| `pnpm start:image`                | Runs the Docker image at `localhost:3000`                        |
-| `pnpm lint` / `pnpm lint:fix`     | Lints the code with oxlint                                       |
-| `pnpm format` / `pnpm format:fix` | Checks / fixes formatting with oxfmt                             |
-| `pnpm typecheck`                  | Type-checks the familienservice app (`.ts` and `.js` files only) |
+| Command                           | Action                                               |
+| :-------------------------------- | :--------------------------------------------------- |
+| `pnpm start`                      | Starts the web dev server at `localhost:4321`        |
+| `pnpm build`                      | Builds the web app to `./web/dist/`                  |
+| `pnpm build:image`                | Builds the Docker image                              |
+| `pnpm start:image`                | Runs the Docker image at `localhost:3000`            |
+| `pnpm lint` / `pnpm lint:fix`     | Lints the code with oxlint                           |
+| `pnpm format` / `pnpm format:fix` | Checks / fixes formatting with oxfmt                 |
+| `pnpm typecheck`                  | Type-checks the web app (`.ts` and `.js` files only) |

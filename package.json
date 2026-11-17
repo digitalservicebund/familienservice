@@ -21,7 +21,7 @@
     "start:image": "docker run --init --rm -p 3000:3000 familienservice",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p familienservice"
+    "typecheck": "tsc -p web"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

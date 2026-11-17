@@ -1,8 +1,8 @@
-/// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    // ... Specify options here.
+    // The repo has no tests yet; remove once the first test exists.
+    passWithNoTests: true,
   },
 });
