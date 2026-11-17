@@ -32,9 +32,7 @@ lefthook install
 pnpm start        # http://localhost:4321
 ```
 
-Run `pnpm test`, `pnpm lint`, `pnpm format` and `pnpm typecheck` to check your changes. There are no tests yet, so `pnpm test` reports "No test files found" and passes.
-
-> **Note:** If `pnpm install` or `pnpm build` fails with unclear errors, check `node --version`. A wrong Node version is the most common cause.
+Run `pnpm test`, `pnpm lint`, `pnpm format` and `pnpm typecheck` to check your changes.
 
 ## Usage
 
