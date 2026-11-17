@@ -16,17 +16,25 @@ Going forward, we plan to add further microfrontends as separate packages. Each 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/download): Version 26 is required. We recommend installing it via [nvm](https://github.com/nvm-sh/nvm).
-- [pnpm](https://pnpm.io/installation): Version 12.x is required. Installation instructions can be found in the pnpm docs.
-- [lefthook](https://lefthook.dev/install/): Runs linting and formatting as Git pre-commit hooks. Run `lefthook install` once to activate them.
+- [Node.js](https://nodejs.org/en/download) 26 (version in `.nvmrc`, e.g. via [nvm](https://github.com/nvm-sh/nvm))
+- [pnpm](https://pnpm.io/installation) 12
+- [lefthook](https://lefthook.dev/install/) for the pre-commit hooks (lint + format)
+- [Docker](https://docs.docker.com/get-docker/), only for building the production image
 
-### Installation
-
-Install the dependencies of all workspace packages from the repository root:
+### Setup
 
 ```sh
+git clone https://github.com/digitalservicebund/familienservice.git
+cd familienservice
+nvm install       # Node version from .nvmrc
 pnpm install
+lefthook install
+pnpm start        # http://localhost:4321
 ```
+
+Run `pnpm test`, `pnpm lint`, `pnpm format` and `pnpm typecheck` to check your changes. There are no tests yet, so `pnpm test` reports "No test files found" and passes.
+
+> **Note:** If `pnpm install` or `pnpm build` fails with unclear errors, check `node --version`. A wrong Node version is the most common cause.
 
 ## Usage
 
@@ -38,6 +46,7 @@ All commands are run from the repository root:
 | `pnpm build`                      | Builds the web app to `./web/dist/`                  |
 | `pnpm build:image`                | Builds the Docker image                              |
 | `pnpm start:image`                | Runs the Docker image at `localhost:3000`            |
+| `pnpm test` / `pnpm test:watch`   | Runs the tests once / in watch mode with Vitest      |
 | `pnpm lint` / `pnpm lint:fix`     | Lints the code with oxlint                           |
 | `pnpm format` / `pnpm format:fix` | Checks / fixes formatting with oxfmt                 |
 | `pnpm typecheck`                  | Type-checks the web app (`.ts` and `.js` files only) |
