@@ -54,12 +54,16 @@ jobs:
         run: pnpm build
 
   test-and-scan-with-sonarcloud:
+    name: Run tests and SonarQube scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # SonarQube needs full history for blame and new-code detection.
+          fetch-depth: 0
 
       - name: Set up pnpm
         # Reads the version from the "packageManager" field in package.json
@@ -74,9 +78,31 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test
-        # Writes coverage/lcov.info for the SonarCloud scan (to be added once SonarCloud is set up)
+      - name: Run tests with coverage for SonarQube
         run: pnpm test:coverage
+
+      # Dependabot PRs don't get access to SONAR_TOKEN, so the Sonar steps are skipped for them.
+      - name: Cache SonarQube packages
+        if: github.actor != 'dependabot[bot]'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: SonarQube Scan
+        if: github.actor != 'dependabot[bot]'
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: SonarQube Quality Gate check
+        if: github.actor != 'dependabot[bot]'
+        uses: SonarSource/sonarqube-quality-gate-action@7a5fffe8e523c40e0c740b6bc2712ab503e52efa # v1.2.1
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-and-push-image:
     needs: [check-format-types-and-lint, test-and-scan-with-sonarcloud]
