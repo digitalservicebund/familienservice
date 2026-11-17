@@ -20,11 +20,13 @@
     "start": "pnpm --parallel --filter @familienservice/web dev",
     "start:image": "docker run --init --rm -p 3000:3000 familienservice-web",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc -p web"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.0",
     "oxfmt": "^0.78.0",
     "oxlint": "^1.93.0",
     "typescript": "^7.0.2",
