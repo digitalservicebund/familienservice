@@ -26,11 +26,13 @@
     "start:web:image": "docker run --init --rm -p 3000:3000 familienservice-web",
     "stop:cms:db": "pnpm --filter @familienservice/cms db:down",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc -p web && pnpm --filter @familienservice/cms typecheck"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.0",
     "oxfmt": "^0.78.0",
     "oxlint": "^1.93.0",
     "typescript": "^7.0.2",

@@ -17,17 +17,23 @@ Going forward, we plan to add further microfrontends as separate packages. Each 
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/download): Version 26 is required. We recommend installing it via [nvm](https://github.com/nvm-sh/nvm).
-- [pnpm](https://pnpm.io/installation): Version 12.x is required. Installation instructions can be found in the pnpm docs.
-- [lefthook](https://lefthook.dev/install/): Runs linting and formatting as Git pre-commit hooks. Run `lefthook install` once to activate them.
+- [Node.js](https://nodejs.org/en/download) 26 (version in `.nvmrc`, e.g. via [nvm](https://github.com/nvm-sh/nvm))
+- [pnpm](https://pnpm.io/installation) 12
+- [lefthook](https://lefthook.dev/install/) for the pre-commit hooks (lint + format)
+- [Docker](https://docs.docker.com/get-docker/), only for building the production image
 
-### Installation
-
-Install the dependencies of all workspace packages from the repository root:
+### Setup
 
 ```sh
+git clone https://github.com/digitalservicebund/familienservice.git
+cd familienservice
+nvm install       # Node version from .nvmrc
 pnpm install
+lefthook install
+pnpm start        # http://localhost:4321
 ```
+
+Run `pnpm test`, `pnpm lint`, `pnpm format` and `pnpm typecheck` to check your changes.
 
 ## Usage
 
@@ -44,6 +50,8 @@ All commands are run from the repository root:
 | `pnpm build:cms`                         | Builds the CMS to `./cms/dist/`                                                              |
 | `pnpm build:web:image`                   | Builds the Docker image of the web app                                                       |
 | `pnpm start:web:image`                   | Runs the Docker image of the web app at `localhost:3000`                                     |
+| `pnpm test` / `pnpm test:watch`          | Runs the tests once / in watch mode with Vitest                                              |
+| `pnpm test:coverage`                     | Runs the tests and writes coverage to `./coverage/`                                          |
 | `pnpm lint` / `pnpm lint:fix`            | Lints the code with oxlint                                                                   |
 | `pnpm format` / `pnpm format:fix`        | Checks / fixes formatting with oxfmt                                                         |
 | `pnpm typecheck`                         | Type-checks the web app (`.ts` and `.js` files only) and the CMS                             |
