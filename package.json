@@ -28,7 +28,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "typecheck": "tsc -p web && pnpm --filter @familienservice/cms typecheck"
+    "typecheck": "pnpm --filter @familienservice/web astro sync && tsc -p web && pnpm --filter @familienservice/cms typecheck"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
