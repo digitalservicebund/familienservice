@@ -45,6 +45,7 @@ All commands are run from the repository root:
 | `pnpm build:image`                | Builds the Docker image                              |
 | `pnpm start:image`                | Runs the Docker image at `localhost:3000`            |
 | `pnpm test` / `pnpm test:watch`   | Runs the tests once / in watch mode with Vitest      |
+| `pnpm test:coverage`              | Runs the tests and writes coverage to `./coverage/`  |
 | `pnpm lint` / `pnpm lint:fix`     | Lints the code with oxlint                           |
 | `pnpm format` / `pnpm format:fix` | Checks / fixes formatting with oxfmt                 |
 | `pnpm typecheck`                  | Type-checks the web app (`.ts` and `.js` files only) |
