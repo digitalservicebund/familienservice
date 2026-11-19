@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 COPY web ./web
 RUN pnpm --filter @familienservice/web build
 
-FROM nginxinc/nginx-unprivileged:stable-alpine
+FROM nginx/nginx-unprivileged:1.31.9-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/web/dist /usr/share/nginx/html
