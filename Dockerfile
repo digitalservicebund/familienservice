@@ -17,4 +17,8 @@ FROM nginx/nginx-unprivileged:1.31.9-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/web/dist /usr/share/nginx/html
 
+# The base image already runs as the unprivileged nginx user (UID 101). Setting it
+# explicitly makes this visible to scanners like Sonar
+USER 101
+
 EXPOSE 3000
