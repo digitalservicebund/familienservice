@@ -22,13 +22,13 @@
     "start": "pnpm start:cms:db && pnpm run \"/^start:(cms|web)$/\"",
     "start:cms": "pnpm --filter @familienservice/cms dev",
     "start:cms:db": "pnpm --filter @familienservice/cms db:up",
-    "start:web": "until curl -sf http://localhost:1337/_health > /dev/null; do sleep 1; done; STRAPI_URL=http://localhost:1337 pnpm --filter @familienservice/web dev",
+    "start:web": "pnpm --filter @familienservice/web dev",
     "start:web:image": "docker run --init --rm -p 3000:3000 familienservice-web",
     "stop:cms:db": "pnpm --filter @familienservice/cms db:down",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "typecheck": "pnpm --filter @familienservice/web astro sync && tsc -p web && pnpm --filter @familienservice/cms typecheck"
+    "typecheck": "tsc -p web && pnpm --filter @familienservice/cms typecheck"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

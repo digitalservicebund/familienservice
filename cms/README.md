@@ -2,8 +2,7 @@
 
 [very early stage]
 
-A [Strapi 5](https://docs.strapi.io) instance to evaluate Strapi as the CMS for the Familienservice. Editors maintain content here; the Astro frontend in `../web` fetches the published
-content at build time via the REST API.
+A [Strapi 5](https://docs.strapi.io) instance to evaluate Strapi as the CMS for the Familienservice. For now this is a minimal setup without content types. Content types and the connection to the Astro frontend in `../web` follow in a separate PR.
 
 ## Getting started
 
@@ -26,15 +25,11 @@ pnpm start:cms:db   # start PostgreSQL (docker compose)
 pnpm start:cms      # start Strapi at http://localhost:1337/admin (via op run)
 ```
 
-On the first start, Strapi asks you to create the first admin user. After that, create and **publish** a Familienleistung and build the frontend against Strapi:
-
-```sh
-STRAPI_URL=http://localhost:1337 pnpm build:web   # or the dev server: pnpm start:web
-```
+On the first start, Strapi asks you to create the first admin user.
 
 `pnpm stop:cms:db` stops the database. The data stays in a Docker volume.
 
-To start everything at once, use `pnpm start`. It starts the database, then runs Strapi (`start:cms`) and the frontend dev server (`start:web`) in parallel. The frontend waits until Strapi answers and starts with `STRAPI_URL` set. The frontend loads the content once on start, so restart it to see content you changed in Strapi.
+To start everything at once, use `pnpm start`. It starts the database, then runs Strapi (`start:cms`) and the frontend dev server (`start:web`) in parallel.
 
 ## How this setup works
 
@@ -58,7 +53,6 @@ Changes compared to the generated project:
 | :--------------------- | :----------------------------------------------------------------------------------------------------- |
 | `config/`              | Server, admin, database, API, middleware and plugin configuration. Values come from env vars.          |
 | `src/api/<type>/`      | One folder per content type: `content-types/…/schema.json` (the model), routes, controllers, services. |
-| `src/middlewares/`     | Custom middlewares, referenced as `global::<file name>`.                                               |
 | `src/index.ts`         | Lifecycle hooks: `register` (before init) and `bootstrap` (before start).                              |
 | `src/admin/`           | Admin panel customization. The `*.example.*` files show the options (e.g. German admin UI).            |
 | `database/migrations/` | Optional custom DB migrations. Strapi creates and alters tables from the schemas itself.               |
@@ -84,22 +78,7 @@ docker compose -f cms/docker-compose.yaml down -v
 
 ### Content types are code
 
-The model lives in `src/api/*/content-types/*/schema.json` and is versioned with Git. The Content-Type Builder in the admin panel works only in development mode (`strapi develop`) and writes these same files. Commit them afterwards. In production mode (`strapi start`) the model cannot be changed. Strapi updates the database tables from the schemas on start.
-
-Current model (deliberately minimal): **Familienleistung** with `titel`, `slug` (generated from `titel`), `beschreibung` and `inhalt` (Markdown). Draft & Publish is enabled.
-
-### Permissions: public read access, published content only
-
-- `bootstrap` in `src/index.ts` grants the **Public** role `find` and `findOne` for Familienleistungen on every start (only if missing). The permissions are code instead of clicks in the admin panel, and the frontend needs no token.
-- Strapi would also answer `?status=draft` for anonymous requests and return unpublished drafts. `src/middlewares/public-published-only.ts` pins anonymous requests to published content. Requests with an API token keep `status`, e.g. for a future preview.
-
-New content types need both: an entry in `PUBLIC_ACTIONS` in `src/index.ts` and the middleware on their `find`/`findOne` routes.
-
-### Connection to the frontend
-
-`web/src/content.config.ts` defines the collection `familienleistungen` with the loader from `web/src/lib/strapi-loader.ts`. It runs at build time (and when the dev server starts), reads all published documents page by page and renders `inhalt` as Markdown. Without `STRAPI_URL`, or if Strapi is not reachable, it logs a warning and the collection stays empty, so CI and the Docker build work without a CMS.
-
-Because the frontend is static, Strapi does not have to be publicly reachable. The flip side: **publishing in Strapi only reaches the website after a new build.** Later, a Strapi webhook could trigger that build.
+There are no content types yet. Once added, the model lives in `src/api/*/content-types/*/schema.json` and is versioned with Git. The Content-Type Builder in the admin panel works only in development mode (`strapi develop`) and writes these same files. Commit them afterwards. In production mode (`strapi start`) the model cannot be changed. Strapi updates the database tables from the schemas on start.
 
 ## Updating Strapi
 
