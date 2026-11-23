@@ -13,6 +13,7 @@
   "scripts": {
     "build": "pnpm run \"/^build:(cms|web)$/\"",
     "build:cms": "pnpm --filter @familienservice/cms build",
+    "build:cms:image": "docker build -f cms/Dockerfile -t familienservice-cms .",
     "build:web": "pnpm --filter @familienservice/web build",
     "build:web:image": "docker build -f web/Dockerfile -t familienservice-web .",
     "format": "oxfmt --check",
