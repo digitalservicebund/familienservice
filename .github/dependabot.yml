@@ -39,7 +39,10 @@ updates:
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
-    directory: /
+    # One Dockerfile per package
+    directories:
+      - /web
+      - /cms
     schedule:
       interval: daily
     cooldown:

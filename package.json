@@ -14,7 +14,7 @@
     "build": "pnpm run \"/^build:(cms|web)$/\"",
     "build:cms": "pnpm --filter @familienservice/cms build",
     "build:web": "pnpm --filter @familienservice/web build",
-    "build:web:image": "docker build -t familienservice-web .",
+    "build:web:image": "docker build -f web/Dockerfile -t familienservice-web .",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
     "lint": "oxlint",

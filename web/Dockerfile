@@ -1,3 +1,7 @@
+# Production image of the web app: the static Astro build, served by nginx. Build it from the
+# repository root, because the pnpm lockfile and workspace live there: `pnpm build:web:image`
+# (docker build -f web/Dockerfile .).
+
 FROM node:26-alpine AS build
 
 WORKDIR /app
@@ -14,7 +18,7 @@ RUN pnpm --filter @familienservice/web build
 
 FROM nginx/nginx-unprivileged:1.31.9-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/web/dist /usr/share/nginx/html
 
 # The base image already runs as the unprivileged nginx user (UID 101). Setting it
