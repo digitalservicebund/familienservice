@@ -9,7 +9,7 @@ A prototype of the Familienservice platform and further microfrontends that toge
 This repository is a [pnpm workspace](https://pnpm.io/workspaces).
 
 - `web/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and served via nginx from the Docker image `familienservice-web`, which the pipeline deploys to staging.
-- `cms/`: A [Strapi](https://strapi.io) CMS (spike) with a PostgreSQL. It has no content types yet and is not yet connected to the web app.
+- `cms/`: A [Strapi](https://strapi.io) CMS (spike) with a PostgreSQL. It has no content types yet and is not yet connected to the web app. The pipeline deploys its Docker image `familienservice-cms` to staging together with the web app.
 
 Going forward, we plan to add further microfrontends as separate packages. Each of them can then either be embedded into the web app as an [island](https://docs.astro.build/en/concepts/islands/) or run standalone. _This will follow in a separate PR._
 
