@@ -7,14 +7,14 @@ FROM node:26-alpine AS base
 WORKDIR /app
 
 # NOTE: keep the pnpm version here in sync with the "packageManager" field in package.json
-RUN npm install -g pnpm@12.11.2
+RUN npm install -g --ignore-scripts pnpm@12.11.2
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY cms/package.json ./cms/
 
 FROM base AS build
 
-RUN pnpm install --frozen-lockfile --filter @familienservice/cms
+RUN pnpm install --frozen-lockfile --ignore-scripts --filter @familienservice/cms
 
 COPY cms ./cms
 # Compiles config/ and src/ to dist/ and builds the admin panel to dist/build/
@@ -22,7 +22,7 @@ RUN pnpm --filter @familienservice/cms build
 
 FROM base AS production-dependencies
 
-RUN pnpm install --frozen-lockfile --prod --filter @familienservice/cms
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts --filter @familienservice/cms
 
 FROM node:26-alpine
 

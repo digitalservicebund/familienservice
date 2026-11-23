@@ -7,11 +7,11 @@ FROM node:26-alpine AS build
 WORKDIR /app
 
 # NOTE: keep the pnpm version here in sync with the "packageManager" field in package.json
-RUN npm install -g pnpm@12.11.2
+RUN npm install -g --ignore-scripts pnpm@12.11.2
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY web/package.json ./web/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY web ./web
 RUN pnpm --filter @familienservice/web build
