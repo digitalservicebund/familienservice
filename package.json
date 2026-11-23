@@ -15,6 +15,7 @@
     "build:image": "docker build -t familienservice-web .",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
+    "import:local": "node scripts/import.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "start": "pnpm --parallel --filter @familienservice/web dev",
@@ -22,7 +23,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "typecheck": "tsc -p web"
+    "typecheck": "tsc -p web && tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

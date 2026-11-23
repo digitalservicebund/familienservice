@@ -1,0 +1,78 @@
+name: BAFzA import
+
+on:
+  repository_dispatch:
+    types: [bafza-export]
+  workflow_dispatch:
+    inputs:
+      bucket_path:
+        description: "Path of the dump in the bucket, e.g. exports/2026-11-23/export.xlsx"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bafza-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      BUCKET_PATH: ${{ github.event.client_payload.bucket_path || inputs.bucket_path }}
+      AWS_DEFAULT_REGION: eu-central-1 # TODO: set the S3 provider's region
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Load secrets from 1Password
+        # Third-party action, pin to commit SHA!
+        uses: 1password/load-secrets-action@581a835fb51b8e7ec56b71cf2ffddd7e68bb25e0 # v2.0.0
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          # TODO: replace placeholder paths with the real 1Password references
+          AWS_ACCESS_KEY_ID: op://bafza-pipeline/TODO-s3/access-key-id
+          AWS_SECRET_ACCESS_KEY: op://bafza-pipeline/TODO-s3/secret-access-key
+          S3_ENDPOINT: op://bafza-pipeline/TODO-s3/endpoint
+          S3_BUCKET: op://bafza-pipeline/TODO-s3/bucket
+          ALERT_WEBHOOK_URL: op://bafza-pipeline/TODO-fs-alerts/webhook-url
+
+      - name: Validate bucket_path
+        run: |
+          if [[ ! "$BUCKET_PATH" =~ ^exports/[A-Za-z0-9._/-]+$ ]] || [[ "$BUCKET_PATH" == *..* ]] || [[ "$BUCKET_PATH" == */ ]]; then
+            echo "::error::Invalid bucket_path (expected: exports/<path>/<file>, without '..')"
+            exit 1
+          fi
+          echo "DUMP_FILE=resources/dump/$(basename "$BUCKET_PATH")" >> "$GITHUB_ENV"
+
+      - name: Download dump from S3
+        run: aws s3 cp "s3://$S3_BUCKET/$BUCKET_PATH" "$DUMP_FILE" --endpoint-url "$S3_ENDPOINT" --only-show-errors
+
+      - name: Run import
+        run: node scripts/import.ts --input "$DUMP_FILE"
+
+      # TODO: write the records to the db
+
+      - name: Alert fs_alerts
+        if: failure()
+        run: |
+          if [[ -z "${ALERT_WEBHOOK_URL:-}" ]]; then
+            echo "::warning::ALERT_WEBHOOK_URL not available, no alert sent"
+            exit 0
+          fi
+          RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          # TODO: adapt the payload format to the fs_alerts webhook (currently Slack-compatible)
+          jq -n --arg url "$RUN_URL" '{text: ("BAFzA import failed: " + $url)}' \
+            | curl -sS --fail -X POST -H "Content-Type: application/json" --data @- "$ALERT_WEBHOOK_URL"

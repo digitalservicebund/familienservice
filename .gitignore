@@ -34,3 +34,7 @@ node_modules/
 
 # test coverage
 coverage/
+
+# BAFzA
+resources/dump/*
+!resources/dump/README.md
