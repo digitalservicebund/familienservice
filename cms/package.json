@@ -7,7 +7,7 @@
     "build": "strapi build",
     "console": "op run --env-file=.env -- strapi console",
     "db:down": "docker compose down",
-    "db:up": "docker compose up --detach --wait",
+    "db:up": "op run --env-file=.env -- docker compose up --detach --wait",
     "dev": "op run --env-file=.env -- strapi develop",
     "start": "op run --env-file=.env -- strapi start",
     "strapi": "strapi",
