@@ -20,8 +20,7 @@ cp -n cms/.env.example cms/.env
 # Fill the .env file with local development secrets only
 # —> generate values with: `openssl rand -hex 32` (for example)
 
-
-pnpm start:cms:db   # start PostgreSQL (docker compose)
+pnpm start:cms:db   # start PostgreSQL (docker compose, via op run)
 pnpm start:cms      # start Strapi at http://localhost:1337/admin (via op run)
 ```
 
@@ -51,34 +50,38 @@ Changes compared to the generated project:
 
 | Path                   | Purpose                                                                                                |
 | :--------------------- | :----------------------------------------------------------------------------------------------------- |
-| `config/`              | Server, admin, database, API, middleware and plugin configuration. Values come from env vars.          |
+| `config/`              | Server, admin, database, API, middleware and plugin configuration. Values come from env vars or files. |
 | `src/api/<type>/`      | One folder per content type: `content-types/…/schema.json` (the model), routes, controllers, services. |
-| `src/index.ts`         | Lifecycle hooks: `register` (before init) and `bootstrap` (before start).                              |
+| `src/index.ts`         | Lifecycle hooks: `register` (before init, sets the secrets) and `bootstrap` (before start).            |
 | `src/admin/`           | Admin panel customization. The `*.example.*` files show the options (e.g. German admin UI).            |
 | `database/migrations/` | Optional custom DB migrations. Strapi creates and alters tables from the schemas itself.               |
 | `public/uploads/`      | Uploaded media (local provider). Not committed.                                                        |
 | `types/generated/`     | TypeScript types Strapi generates from the schemas on `develop`. Not committed.                        |
+| `Dockerfile`           | Production image, see below.                                                                           |
 
 ### Configuration and secrets: `.env.example`, `.env` and 1Password
 
 - `cms/.env.example` is committed and lists all variables with example values.
 - `cms/.env` is your local copy (`cp -n cms/.env.example cms/.env`) and ignored by Git. Adjust it locally as needed.
 - `pnpm start:cms` runs `strapi develop`. Strapi also reads `.env` on its own, but values already present in the environment win.
-- `pnpm start:cms:db` starts Docker Compose directly. Docker Compose reads the `DATABASE_*` variables from `cms/.env` automatically.
+- `pnpm start:cms:db` runs Docker Compose via `op run --env-file=.env` as well, so the database password reaches PostgreSQL resolved.
 
-### Database: PostgreSQL via Docker Compose
+### Secrets: files in the cluster, `.env` locally
 
-`docker-compose.yaml` runs PostgreSQL 17, reachable only on `127.0.0.1:5432`, with the data in the volume `familienservice-cms_postgres-data`. Database name, user, password and port come from the `DATABASE_*` variables in `cms/.env`.
+All secrets go through `getSecret(name)` from `src/utils/secretsAndEnvironmentVariables.ts`, which checks where Strapi runs:
 
-PostgreSQL applies the password only when the volume is initialized. If you change it, reset the database (this **deletes all local CMS data**):
+- **Cluster:** reads the file `${SECRETS_FILE_PATH}/<name>`, e.g. `/etc/secrets/DATABASE_PASSWORD`. The cluster is detected by `KUBERNETES_SERVICE_HOST`, which Kubernetes sets in every container. Secrets must not be env vars there (Kyverno policy), so they are mounted as files.
+- **Locally:** reads the env var `<name>` from `cms/.env`. Secrets there are 1Password references (`op://…`) that `op run` resolves, see `cms/.env.example`.
+
+### Local database: PostgreSQL via Docker Compose
+
+`docker-compose.yaml` runs PostgreSQL 17, reachable only on `127.0.0.1` (port `DATABASE_PORT`, default 5432), with the data in the volume `familienservice-cms_postgres-data`. It creates the database and the user from `DATABASE_NAME`, `DATABASE_USERNAME` and `DATABASE_PASSWORD`. Docker makes this user the owner of the database, so locally Strapi can create and alter tables.
+
+PostgreSQL applies name, user and password only when the volume is initialized. If you change them, reset the database (this **deletes all local CMS data**):
 
 ```sh
 docker compose -f cms/docker-compose.yaml down -v
 ```
-
-### Content types are code
-
-There are no content types yet. Once added, the model lives in `src/api/*/content-types/*/schema.json` and is versioned with Git. The Content-Type Builder in the admin panel works only in development mode (`strapi develop`) and writes these same files. Commit them afterwards. In production mode (`strapi start`) the model cannot be changed. Strapi updates the database tables from the schemas on start.
 
 ## Updating Strapi
 
