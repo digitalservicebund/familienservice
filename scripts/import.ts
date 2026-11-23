@@ -20,10 +20,7 @@ import { parseArgs } from "node:util";
 import { inflateRawSync } from "node:zlib";
 
 const USAGE = "Usage: node scripts/import.ts --input <path> [--output <path>]";
-const DEFAULT_OUT_DIR = path.resolve(
-  import.meta.dirname,
-  "../resources/dump/out",
-);
+const DEFAULT_OUT_DIR = path.resolve(import.meta.dirname, "../resources/dump/out");
 
 // ---------------------------------------------------------------------------
 // Cleaning
@@ -50,12 +47,7 @@ const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 const TRAILING_WS_RE = /[ \t]+$/gm;
 
 type CleanCounts = Record<
-  | "bom"
-  | "lineEndings"
-  | "mojibake"
-  | "nfc"
-  | "controlChars"
-  | "trailingWhitespace",
+  "bom" | "lineEndings" | "mojibake" | "nfc" | "controlChars" | "trailingWhitespace",
   number
 >;
 
@@ -75,10 +67,7 @@ function count(text: string, re: RegExp): number {
 }
 
 // Accumulates into `counts` so that many cells still result in ONE log line.
-export function clean(
-  text: string,
-  counts: CleanCounts = newCleanCounts(),
-): string {
+export function clean(text: string, counts: CleanCounts = newCleanCounts()): string {
   // 1. Remove BOM
   if (text.startsWith("﻿")) {
     text = text.slice(1);
@@ -128,27 +117,18 @@ function fail(message: string, exitCode: number): never {
 function unzip(buf: Buffer): (name: string) => string | undefined {
   let eocd = buf.length - 22;
   while (eocd >= 0 && buf.readUInt32LE(eocd) !== 0x06054b50) eocd--;
-  if (eocd < 0)
-    fail("Error: input is not a valid XLSX file (not a ZIP)", 1);
+  if (eocd < 0) fail("Error: input is not a valid XLSX file (not a ZIP)", 1);
 
-  const entries = new Map<
-    string,
-    { method: number; start: number; size: number }
-  >();
+  const entries = new Map<string, { method: number; start: number; size: number }>();
   let p = buf.readUInt32LE(eocd + 16);
   for (let i = buf.readUInt16LE(eocd + 10); i > 0; i--) {
-    if (buf.readUInt32LE(p) !== 0x02014b50)
-      fail("Error: ZIP directory is corrupt", 1);
+    if (buf.readUInt32LE(p) !== 0x02014b50) fail("Error: ZIP directory is corrupt", 1);
     const nameLen = buf.readUInt16LE(p + 28);
     const local = buf.readUInt32LE(p + 42);
     entries.set(buf.toString("utf8", p + 46, p + 46 + nameLen), {
       method: buf.readUInt16LE(p + 10),
       size: buf.readUInt32LE(p + 20),
-      start:
-        local +
-        30 +
-        buf.readUInt16LE(local + 26) +
-        buf.readUInt16LE(local + 28),
+      start: local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28),
     });
     p += 46 + nameLen + buf.readUInt16LE(p + 30) + buf.readUInt16LE(p + 32);
   }
@@ -182,20 +162,14 @@ function xmlText(s: string): string {
             : (XML_ENTITIES[e] ?? m),
       )
       // Excel encodes special characters like \r as _x000D_ (and a literal "_x" as _x005F_x…)
-      .replace(/_x([0-9A-Fa-f]{4})_/g, (_, hex: string) =>
-        String.fromCharCode(parseInt(hex, 16)),
-      )
+      .replace(/_x([0-9A-Fa-f]{4})_/g, (_, hex: string) => String.fromCharCode(parseInt(hex, 16)))
   );
 }
 
 // Text from <t> elements, without phonetic hints (<rPh>).
 function runsText(xml: string): string {
-  const parts = xml
-    .replace(/<rPh\b[\s\S]*?<\/rPh>/g, "")
-    .match(/<t(?:\s[^>]*)?>[\s\S]*?<\/t>/g);
-  return (parts ?? [])
-    .map((t) => xmlText(t.replace(/^<t[^>]*>|<\/t>$/g, "")))
-    .join("");
+  const parts = xml.replace(/<rPh\b[\s\S]*?<\/rPh>/g, "").match(/<t(?:\s[^>]*)?>[\s\S]*?<\/t>/g);
+  return (parts ?? []).map((t) => xmlText(t.replace(/^<t[^>]*>|<\/t>$/g, ""))).join("");
 }
 
 function columnIndex(ref: string): number {
@@ -210,25 +184,16 @@ export function readXlsx(buf: Buffer): string[][] {
   const workbook = read("xl/workbook.xml");
   const rels = read("xl/_rels/workbook.xml.rels");
   const relId = workbook?.match(/<sheet\b[^>]*\br:id="([^"]+)"/)?.[1];
-  const target = rels?.match(
-    new RegExp(`<Relationship\\b[^>]*\\bId="${relId}"[^>]*>`),
-  )?.[0];
+  const target = rels?.match(new RegExp(`<Relationship\\b[^>]*\\bId="${relId}"[^>]*>`))?.[0];
   const sheetPath = target?.match(/\bTarget="([^"]+)"/)?.[1];
-  if (!sheetPath)
-    fail("Error: no worksheet found in XLSX file", 1);
-  const sheet = read(
-    sheetPath.startsWith("/") ? sheetPath.slice(1) : `xl/${sheetPath}`,
-  );
+  if (!sheetPath) fail("Error: no worksheet found in XLSX file", 1);
+  const sheet = read(sheetPath.startsWith("/") ? sheetPath.slice(1) : `xl/${sheetPath}`);
   if (!sheet) fail("Error: worksheet missing in XLSX file", 1);
 
-  const shared = (
-    read("xl/sharedStrings.xml")?.match(/<si>[\s\S]*?<\/si>/g) ?? []
-  ).map(runsText);
+  const shared = (read("xl/sharedStrings.xml")?.match(/<si>[\s\S]*?<\/si>/g) ?? []).map(runsText);
 
   const rows: string[][] = [];
-  for (const [, rowBody = ""] of sheet.matchAll(
-    /<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g,
-  )) {
+  for (const [, rowBody = ""] of sheet.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
     const row: string[] = [];
     for (const [, attrs = "", body = ""] of rowBody.matchAll(
       /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g,
@@ -257,9 +222,7 @@ export function readXlsx(buf: Buffer): string[][] {
 // Splits at the FIRST colon; without a colon the whole title is the Leistung.
 export function splitTitle(title: string): [leistung: string, lebensumstand: string] {
   const i = title.indexOf(":");
-  return i < 0
-    ? [title.trim(), ""]
-    : [title.slice(0, i).trim(), title.slice(i + 1).trim()];
+  return i < 0 ? [title.trim(), ""] : [title.slice(0, i).trim(), title.slice(i + 1).trim()];
 }
 
 export function toCsv(rows: string[][]): string {
@@ -272,10 +235,7 @@ export function processXlsx(buf: Buffer): string {
   const [header = [], ...records] = readXlsx(buf);
   const titleCol = header.indexOf("dokumenttitel");
   if (header.indexOf("id") < 0 || titleCol < 0) {
-    fail(
-      "Error: expected columns 'id' and 'dokumenttitel' in header row",
-      1,
-    );
+    fail("Error: expected columns 'id' and 'dokumenttitel' in header row", 1);
   }
 
   const cleanCounts = newCleanCounts();
@@ -322,14 +282,11 @@ export function processText(raw: string): string {
 
 // Only returns the error code/type, never err.message – it could contain data contents.
 export function describe(err: unknown): string {
-  if (err instanceof Error)
-    return (err as NodeJS.ErrnoException).code ?? err.name;
+  if (err instanceof Error) return (err as NodeJS.ErrnoException).code ?? err.name;
   return "unknown error";
 }
 
-export async function main(
-  args: string[] = process.argv.slice(2),
-): Promise<void> {
+export async function main(args: string[] = process.argv.slice(2)): Promise<void> {
   let input: string | undefined;
   let output: string | undefined;
   try {
@@ -344,10 +301,7 @@ export async function main(
 
   const { name, ext } = path.parse(input);
   const isXlsx = ext.toLowerCase() === ".xlsx";
-  output ??= path.join(
-    DEFAULT_OUT_DIR,
-    `${name}.clean${isXlsx ? ".csv" : ext}`,
-  );
+  output ??= path.join(DEFAULT_OUT_DIR, `${name}.clean${isXlsx ? ".csv" : ext}`);
 
   let raw: Buffer;
   try {

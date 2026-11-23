@@ -216,7 +216,10 @@ describe("splitTitle", () => {
   });
 
   it("splits at the first colon only", () => {
-    expect(splitTitle("Leistung A: Variante: Testfall")).toEqual(["Leistung A", "Variante: Testfall"]);
+    expect(splitTitle("Leistung A: Variante: Testfall")).toEqual([
+      "Leistung A",
+      "Variante: Testfall",
+    ]);
   });
 
   it("uses the whole title as Leistung when there is no colon", () => {
@@ -254,20 +257,26 @@ describe("readXlsx", () => {
 
   it("joins rich text runs and drops phonetic hints", () => {
     const buf = xlsx('<row r="1"><c r="A1" t="s"><v>0</v></c></row>', {
-      sharedStrings: ['<r><t>fett</t></r><r><t xml:space="preserve"> normal</t></r><rPh><t>hint</t></rPh>'],
+      sharedStrings: [
+        '<r><t>fett</t></r><r><t xml:space="preserve"> normal</t></r><rPh><t>hint</t></rPh>',
+      ],
     });
     expect(readXlsx(buf)).toEqual([["fett normal"]]);
   });
 
   it("decodes XML entities and Excel escapes", () => {
     const buf = xlsx('<row r="1"><c r="A1" t="s"><v>0</v></c></row>', {
-      sharedStrings: ["<t>&lt;a&gt; &amp; &quot;b&quot; &apos;c&apos; &#228; &#xFC; &unknown; x_x000D_y _x005F_x000D_</t>"],
+      sharedStrings: [
+        "<t>&lt;a&gt; &amp; &quot;b&quot; &apos;c&apos; &#228; &#xFC; &unknown; x_x000D_y _x005F_x000D_</t>",
+      ],
     });
     expect(readXlsx(buf)).toEqual([["<a> & \"b\" 'c' ä ü &unknown; x\ry _x000D_"]]);
   });
 
   it("fills gaps between cells and skips empty rows", () => {
-    const buf = xlsx('<row r="1"><c r="A1"><v>1</v></c><c r="C1"><v>3</v></c></row><row r="2"/><row r="3"><c r="AA3"><v>x</v></c></row>');
+    const buf = xlsx(
+      '<row r="1"><c r="A1"><v>1</v></c><c r="C1"><v>3</v></c></row><row r="2"/><row r="3"><c r="AA3"><v>x</v></c></row>',
+    );
     const rows = readXlsx(buf);
     expect(rows[0]).toEqual(["1", "", "3"]);
     expect(rows[1]).toEqual([]);
@@ -290,12 +299,18 @@ describe("readXlsx", () => {
   });
 
   it("resolves an absolute worksheet path", () => {
-    const buf = xlsx('<row r="1"><c r="A1"><v>1</v></c></row>', { target: "/xl/worksheets/sheet1.xml" });
+    const buf = xlsx('<row r="1"><c r="A1"><v>1</v></c></row>', {
+      target: "/xl/worksheets/sheet1.xml",
+    });
     expect(readXlsx(buf)).toEqual([["1"]]);
   });
 
   it.each([
-    ["not a ZIP file", () => Buffer.from("not a zip file at all, just some text"), "Error: input is not a valid XLSX file (not a ZIP)"],
+    [
+      "not a ZIP file",
+      () => Buffer.from("not a zip file at all, just some text"),
+      "Error: input is not a valid XLSX file (not a ZIP)",
+    ],
     [
       "a corrupt ZIP directory",
       () => {
@@ -305,9 +320,21 @@ describe("readXlsx", () => {
       },
       "Error: ZIP directory is corrupt",
     ],
-    ["an unsupported compression", () => xlsx("", { method: 12 }), "Error: unsupported ZIP compression"],
-    ["no workbook", () => xlsx("", { omit: ["xl/workbook.xml"] }), "Error: no worksheet found in XLSX file"],
-    ["no worksheet file", () => xlsx("", { omit: ["xl/worksheets/sheet1.xml"] }), "Error: worksheet missing in XLSX file"],
+    [
+      "an unsupported compression",
+      () => xlsx("", { method: 12 }),
+      "Error: unsupported ZIP compression",
+    ],
+    [
+      "no workbook",
+      () => xlsx("", { omit: ["xl/workbook.xml"] }),
+      "Error: no worksheet found in XLSX file",
+    ],
+    [
+      "no worksheet file",
+      () => xlsx("", { omit: ["xl/worksheets/sheet1.xml"] }),
+      "Error: worksheet missing in XLSX file",
+    ],
   ])("exits with code 1 for %s", (_, input, message) => {
     expect(() => readXlsx(input())).toThrow(new ExitError(1));
     expect(error).toHaveBeenCalledWith(message);
@@ -335,8 +362,12 @@ describe("processXlsx", () => {
         ["3", "Ohne Doppelpunkt", "Ohne Doppelpunkt", "", ""],
       ]),
     );
-    expect(log).toHaveBeenCalledWith("clean: bom=0 lineEndings=1 mojibake=1 nfc=0 controlChars=0 trailingWhitespace=2");
-    expect(log).toHaveBeenCalledWith("records: records=3 titleWithoutColon=1 titleMultipleColons=1");
+    expect(log).toHaveBeenCalledWith(
+      "clean: bom=0 lineEndings=1 mojibake=1 nfc=0 controlChars=0 trailingWhitespace=2",
+    );
+    expect(log).toHaveBeenCalledWith(
+      "records: records=3 titleWithoutColon=1 titleMultipleColons=1",
+    );
   });
 
   it("handles a file with only a header row", () => {
@@ -351,20 +382,26 @@ describe("processXlsx", () => {
     ["a header row", ""],
   ])("exits with code 1 when %s is missing", (_, sheetData) => {
     expect(() => processXlsx(xlsx(sheetData))).toThrow(new ExitError(1));
-    expect(error).toHaveBeenCalledWith("Error: expected columns 'id' and 'dokumenttitel' in header row");
+    expect(error).toHaveBeenCalledWith(
+      "Error: expected columns 'id' and 'dokumenttitel' in header row",
+    );
   });
 });
 
 describe("processText", () => {
   it("cleans raw text and logs the counts", () => {
     expect(processText("﻿a \r\nb")).toBe("a\nb");
-    expect(log).toHaveBeenCalledWith("clean: bom=1 lineEndings=1 mojibake=0 nfc=0 controlChars=0 trailingWhitespace=1");
+    expect(log).toHaveBeenCalledWith(
+      "clean: bom=1 lineEndings=1 mojibake=0 nfc=0 controlChars=0 trailingWhitespace=1",
+    );
   });
 });
 
 describe("describe", () => {
   it("returns the error code of system errors", () => {
-    expect(describeError(Object.assign(new Error("secret content"), { code: "ENOENT" }))).toBe("ENOENT");
+    expect(describeError(Object.assign(new Error("secret content"), { code: "ENOENT" }))).toBe(
+      "ENOENT",
+    );
   });
 
   it("returns the error name, never the message", () => {
@@ -405,7 +442,9 @@ describe("main", () => {
       ]),
     );
     expect(log).toHaveBeenCalledWith(expect.stringMatching(/^read: .*export\.xlsx \(\d+ bytes\)$/));
-    expect(log).toHaveBeenCalledWith(expect.stringMatching(/^written: .*result\.csv \(\d+ chars\)$/));
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(/^written: .*result\.csv \(\d+ chars\)$/),
+    );
   });
 
   it("cleans other files as raw text", async () => {
@@ -421,7 +460,11 @@ describe("main", () => {
   it("writes to resources/dump/out/<name>.clean.csv by default", async () => {
     const name = `import-test-${process.pid}-${Date.now()}`;
     const input = path.join(dir, `${name}.xlsx`);
-    const expected = path.resolve(import.meta.dirname, "../../resources/dump/out", `${name}.clean.csv`);
+    const expected = path.resolve(
+      import.meta.dirname,
+      "../../resources/dump/out",
+      `${name}.clean.csv`,
+    );
     await writeFile(input, exportTable([]));
 
     try {
@@ -447,7 +490,9 @@ describe("main", () => {
     ["an unknown option", ["--input", "x.xlsx", "--unknown"]],
   ])("exits with code 2 and the usage for %s", async (_, args) => {
     await expect(main(args)).rejects.toThrow(new ExitError(2));
-    expect(error).toHaveBeenCalledWith("Usage: node scripts/import.ts --input <path> [--output <path>]");
+    expect(error).toHaveBeenCalledWith(
+      "Usage: node scripts/import.ts --input <path> [--output <path>]",
+    );
   });
 
   it("exits with code 1 when the input cannot be read", async () => {
@@ -462,7 +507,11 @@ describe("main", () => {
     await writeFile(input, "GEHEIM-INHALT");
 
     await expect(main(["--input", input, "--output", output])).rejects.toThrow(new ExitError(1));
-    expect(error).toHaveBeenCalledWith(expect.stringMatching(new RegExp(`^Error writing ${output.replaceAll("\\", "\\\\")}: E[A-Z]+$`)));
+    expect(error).toHaveBeenCalledWith(
+      expect.stringMatching(
+        new RegExp(`^Error writing ${output.replaceAll("\\", "\\\\")}: E[A-Z]+$`),
+      ),
+    );
     expect(allOutput()).not.toMatch(/GEHEIM/);
   });
 });
