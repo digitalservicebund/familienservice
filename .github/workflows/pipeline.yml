@@ -105,6 +105,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-and-push-image:
+    name: Build and push image (${{ matrix.package }})
     needs: [check-format-types-and-lint, test-and-scan-with-sonarcloud]
     if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
@@ -112,9 +113,19 @@ jobs:
       contents: read
       id-token: write # Required for identity challenge with sigstore/fulcio
       packages: write
+    strategy:
+      # Build the other image even if one fails. deploy-staging still waits for both.
+      fail-fast: false
+      matrix:
+        include:
+          - package: familienservice-web
+            dockerfile: web/Dockerfile
+          # Built and pushed only, not deployed yet
+          - package: familienservice-cms
+            dockerfile: cms/Dockerfile
     env:
-      PACKAGE_NAME: familienservice-web
-      IMAGE_NAME: digitalservicebund/familienservice-web
+      PACKAGE_NAME: ${{ matrix.package }}
+      IMAGE_NAME: digitalservicebund/${{ matrix.package }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -133,13 +144,16 @@ jobs:
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
+          # The repository root for both images: the pnpm lockfile and workspace live there
           context: .
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: |
             ghcr.io/${{ env.IMAGE_NAME }}
             ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # One cache per image, so the two builds don't overwrite each other's cache
+          cache-from: type=gha,scope=${{ matrix.package }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.package }}
           sbom: true
 
       - name: Generate cosign vulnerability scan record

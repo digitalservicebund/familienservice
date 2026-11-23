@@ -1,0 +1,43 @@
+{
+  "name": "@familienservice/cms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Strapi CMS for the Familienservice content",
+  "scripts": {
+    "build": "strapi build",
+    "console": "op run --env-file=.env -- strapi console",
+    "db:down": "docker compose down",
+    "db:up": "op run --env-file=.env -- docker compose up --detach --wait",
+    "dev": "op run --env-file=.env -- strapi develop",
+    "start": "op run --env-file=.env -- strapi start",
+    "strapi": "strapi",
+    "strapi:upgrade": "pnpm dlx @strapi/upgrade minor",
+    "strapi:upgrade:dry": "pnpm dlx @strapi/upgrade minor --dry",
+    "strapi:upgrade:major": "pnpm dlx @strapi/upgrade major",
+    "strapi:upgrade:major:dry": "pnpm dlx @strapi/upgrade major --dry",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@strapi/database": "5.62.0",
+    "@strapi/plugin-users-permissions": "5.62.0",
+    "@strapi/strapi": "5.62.0",
+    "pg": "8.20.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.30.3",
+    "styled-components": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": "^26"
+  },
+  "strapi": {
+    "uuid": "11996160-d6d4-4009-966c-8a71d59f0033",
+    "telemetryDisabled": true
+  }
+}

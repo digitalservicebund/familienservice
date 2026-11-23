@@ -1,2 +1,10 @@
 packages:
   - web
+  - cms
+
+# Install scripts that may run (pnpm blocks all others). Needed by Strapi (cms).
+allowBuilds:
+  "@swc/core": true
+  core-js-pure: true
+  esbuild: true
+  sharp: true
