@@ -15,9 +15,34 @@ updates:
         patterns:
           - "oxfmt"
           - "oxlint"
+      # All @strapi/* packages must always have the same version
+      strapi:
+        patterns:
+          - "@strapi/*"
+    ignore:
+      # Strapi majors need codemods and the migration guide: run
+      # `pnpm --filter @familienservice/cms strapi:upgrade:major` instead (see cms/README.md).
+      # The admin panel dependencies (React etc.) follow the versions Strapi supports.
+      - dependency-name: "@strapi/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-router-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "styled-components"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
-    directory: /
+    # One Dockerfile per package
+    directories:
+      - /web
+      - /cms
     schedule:
       interval: daily
     cooldown:

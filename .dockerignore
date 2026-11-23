@@ -6,3 +6,8 @@
 
 # BAFzA dump
 resources/dump
+
+# Strapi (cms): local admin cache and uploaded media
+**/.strapi
+cms/public/uploads/*
+!cms/public/uploads/.gitkeep
