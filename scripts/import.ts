@@ -45,6 +45,7 @@ const MOJIBAKE: Record<string, string> = {
 };
 // Single pass with alternation so that one replacement cannot create a new match.
 const MOJIBAKE_RE = new RegExp(Object.keys(MOJIBAKE).join("|"), "g");
+// oxlint-disable-next-line no-control-regex -- matching control characters is the point: they get removed
 const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 const TRAILING_WS_RE = /[ \t]+$/gm;
 
@@ -58,7 +59,7 @@ type CleanCounts = Record<
   number
 >;
 
-function newCleanCounts(): CleanCounts {
+export function newCleanCounts(): CleanCounts {
   return {
     bom: 0,
     lineEndings: 0,
@@ -204,7 +205,7 @@ function columnIndex(ref: string): number {
 }
 
 // Returns the first worksheet as rows (row 1 = header).
-function readXlsx(buf: Buffer): string[][] {
+export function readXlsx(buf: Buffer): string[][] {
   const read = unzip(buf);
   const workbook = read("xl/workbook.xml");
   const rels = read("xl/_rels/workbook.xml.rels");
@@ -254,20 +255,20 @@ function readXlsx(buf: Buffer): string[][] {
 
 // "Elterngeld: Selbstständige" -> ["Elterngeld", "Selbstständige"].
 // Splits at the FIRST colon; without a colon the whole title is the Leistung.
-function splitTitle(title: string): [leistung: string, lebensumstand: string] {
+export function splitTitle(title: string): [leistung: string, lebensumstand: string] {
   const i = title.indexOf(":");
   return i < 0
     ? [title.trim(), ""]
     : [title.slice(0, i).trim(), title.slice(i + 1).trim()];
 }
 
-function toCsv(rows: string[][]): string {
+export function toCsv(rows: string[][]): string {
   // Semicolon + BOM so that a German Excel opens the file correctly on double-click.
   const field = (v: string) => `"${v.replaceAll('"', '""')}"`;
   return "﻿" + rows.map((r) => r.map(field).join(";")).join("\r\n") + "\r\n";
 }
 
-function processXlsx(buf: Buffer): string {
+export function processXlsx(buf: Buffer): string {
   const [header = [], ...records] = readXlsx(buf);
   const titleCol = header.indexOf("dokumenttitel");
   if (header.indexOf("id") < 0 || titleCol < 0) {
@@ -305,7 +306,7 @@ function processXlsx(buf: Buffer): string {
   return toCsv(out);
 }
 
-function processText(raw: string): string {
+export function processText(raw: string): string {
   const counts = newCleanCounts();
   const cleaned = clean(raw, counts);
   console.log(formatCounts("clean", counts));
@@ -320,17 +321,20 @@ function processText(raw: string): string {
 // ---------------------------------------------------------------------------
 
 // Only returns the error code/type, never err.message – it could contain data contents.
-function describe(err: unknown): string {
+export function describe(err: unknown): string {
   if (err instanceof Error)
     return (err as NodeJS.ErrnoException).code ?? err.name;
   return "unknown error";
 }
 
-async function main(): Promise<void> {
+export async function main(
+  args: string[] = process.argv.slice(2),
+): Promise<void> {
   let input: string | undefined;
   let output: string | undefined;
   try {
     ({ input, output } = parseArgs({
+      args,
       options: { input: { type: "string" }, output: { type: "string" } },
     }).values);
   } catch {
@@ -364,4 +368,7 @@ async function main(): Promise<void> {
   console.log(`written: ${output} (${result.length} chars)`);
 }
 
-main().catch((err: unknown) => fail(`Error: ${describe(err)}`, 1));
+// Only run when executed directly (node scripts/import.ts), not when imported by the tests.
+if (import.meta.main) {
+  main().catch((err: unknown) => fail(`Error: ${describe(err)}`, 1));
+}

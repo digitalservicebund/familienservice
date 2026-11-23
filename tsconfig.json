@@ -8,6 +8,8 @@
     "strict": true,
     "noEmit": true,
     "erasableSyntaxOnly": true,
+    // Node runs .ts files directly, so imports between them use the .ts extension.
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
