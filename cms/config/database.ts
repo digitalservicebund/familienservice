@@ -1,39 +1,36 @@
 import type { Core } from "@strapi/strapi";
-import { isDatabaseClientKind } from "@strapi/database";
 
-const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database => {
-  const client = env("DATABASE_CLIENT", "sqlite");
+import { getSecret } from "../src/utils/secretsAndEnvironmentVariables";
 
-  if (!isDatabaseClientKind(client)) {
-    throw new Error(
-      `Unsupported DATABASE_CLIENT: ${client}. Use "postgres", "mysql", or "sqlite".`,
-    );
-  }
+// The local Docker database (docker-compose.yaml) has no TLS and is only reachable from this machine.
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
-  return {
-    connection: {
-      client: "postgres",
-      connection: {
-        connectionString: env("DATABASE_URL"),
-        host: env("DATABASE_HOST", "localhost"),
-        port: env.int("DATABASE_PORT", 5432),
-        database: env("DATABASE_NAME", "strapi"),
-        user: env("DATABASE_USERNAME", "strapi"),
-        password: env("DATABASE_PASSWORD", "strapi"),
-        ssl: env.bool("DATABASE_SSL", false) && {
-          key: env("DATABASE_SSL_KEY", undefined),
-          cert: env("DATABASE_SSL_CERT", undefined),
-          ca: env("DATABASE_SSL_CA", undefined),
-          capath: env("DATABASE_SSL_CAPATH", undefined),
-          cipher: env("DATABASE_SSL_CIPHER", undefined),
-          rejectUnauthorized: env.bool("DATABASE_SSL_REJECT_UNAUTHORIZED", true),
-        },
-        schema: env("DATABASE_SCHEMA", "public"),
-      },
-      pool: { min: env.int("DATABASE_POOL_MIN", 2), max: env.int("DATABASE_POOL_MAX", 10) },
-      acquireConnectionTimeout: env.int("DATABASE_CONNECTION_TIMEOUT", 60000),
+/**
+ * PostgreSQL. getSecret reads the DATABASE_* values from the files ${SECRETS_FILE_PATH}/DATABASE_*
+ * in the cluster and from the env vars of the same name (cms/.env) locally. See cms/README.md.
+ *
+ * `connection` is a function so the secrets are read when Strapi connects at startup, not when
+ * other commands such as `strapi build` load this config. Knex calls it once per process, so rotated
+ * credentials need a restart. Strapi logs a warning that connection functions are experimental.
+ */
+const config = (): Core.Config.Database => ({
+  connection: {
+    client: "postgres",
+    connection: () => {
+      const host = getSecret("DATABASE_HOST");
+      return {
+        host,
+        port: Number(getSecret("DATABASE_PORT")),
+        database: getSecret("DATABASE_NAME"),
+        user: getSecret("DATABASE_USERNAME"),
+        password: getSecret("DATABASE_PASSWORD"),
+        // TLS with certificate and hostname verification against Node's CA store (STACKIT Managed
+        // PostgreSQL). Only a database on a loopback address is reached without TLS.
+        ssl: LOOPBACK_HOSTS.has(host) ? false : { rejectUnauthorized: true },
+        schema: "public",
+      };
     },
-  };
-};
+  },
+});
 
 export default config;
