@@ -120,6 +120,9 @@ jobs:
         include:
           - package: familienservice-web
             dockerfile: web/Dockerfile
+          # Built and pushed only, not deployed yet
+          - package: familienservice-cms
+            dockerfile: cms/Dockerfile
     env:
       PACKAGE_NAME: ${{ matrix.package }}
       IMAGE_NAME: digitalservicebund/${{ matrix.package }}
