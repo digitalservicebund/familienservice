@@ -192,7 +192,7 @@ importers:
         version: 5.63.0(pg@8.23.1)(supports-color@8.1.1)(ts-toolbelt@9.6.0)
       '@strapi/plugin-users-permissions':
         specifier: 5.63.0
-        version: 5.63.0(08ef28ef437033b8ae87975d840070d4)
+        version: 5.63.0(6f9309ddb3afeb8c6a646320eb7067d6)
       '@strapi/strapi':
         specifier: 5.63.0
         version: 5.63.0(@babel/runtime@7.29.15)(@codemirror/autocomplete@6.20.4)(@codemirror/language@6.13.1)(@codemirror/lint@6.9.8)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@emotion/is-prop-valid@1.4.0)(@swc/core@1.16.22(@swc/helpers@0.5.24))(@swc/helpers@0.5.24)(@types/hoist-non-react-statics@3.3.7(@types/react@18.3.31))(@types/koa@2.15.2)(@types/node@26.6.6)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(clean-css@5.3.3)(codemirror@6.0.2)(csso@5.0.5)(date-fns@2.30.0)(debug@4.3.4(supports-color@8.1.1))(esbuild@0.28.2)(html-minifier-terser@6.1.0)(jiti@2.7.0)(koa@2.16.4(supports-color@8.1.1))(lightningcss@1.33.0)(pg@8.23.1)(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(redux@4.2.1)(sharp@0.35.5(@types/node@26.6.6))(styled-components@6.6.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(svgo@4.1.0)(terser@5.51.4)(ts-toolbelt@9.6.0)(type-fest@0.21.3)(uglify-js@3.19.3)(yaml@2.9.1)
@@ -222,8 +222,8 @@ importers:
         specifier: ^18
         version: 18.3.7(@types/react@18.3.31)
       typescript:
-        specifier: ^5
-        version: 5.9.3
+        specifier: ^7
+        version: 7.0.2
 
   web:
     dependencies:
@@ -9195,6 +9195,18 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
+  '@formatjs/intl@2.10.0(typescript@7.0.2)':
+    dependencies:
+      '@formatjs/ecma402-abstract': 1.18.2
+      '@formatjs/fast-memoize': 2.2.0
+      '@formatjs/icu-messageformat-parser': 2.7.6
+      '@formatjs/intl-displaynames': 6.6.6
+      '@formatjs/intl-listformat': 7.5.5
+      intl-messageformat: 10.5.11
+      tslib: 2.9.1
+    optionalDependencies:
+      typescript: 7.0.2
+
   '@hapi/bourne@3.0.0': {}
 
   '@hono/node-server@1.19.19(hono@4.13.20)':
@@ -11477,7 +11489,7 @@ snapshots:
     transitivePeerDependencies:
       - ts-toolbelt
 
-  '@strapi/plugin-users-permissions@5.63.0(08ef28ef437033b8ae87975d840070d4)':
+  '@strapi/plugin-users-permissions@5.63.0(6f9309ddb3afeb8c6a646320eb7067d6)':
     dependencies:
       '@strapi/admin': 5.63.0(@babel/runtime@7.29.15)(@codemirror/autocomplete@6.20.4)(@codemirror/language@6.13.1)(@codemirror/lint@6.9.8)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@emotion/is-prop-valid@1.4.0)(@strapi/data-transfer@5.63.0(@types/koa@2.15.2)(@types/node@26.6.6)(pg@8.23.1)(supports-color@8.1.1)(ts-toolbelt@9.6.0))(@types/hoist-non-react-statics@3.3.7(@types/react@18.3.31))(@types/koa@2.15.2)(@types/node@26.6.6)(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(codemirror@5.65.21)(debug@4.3.4(supports-color@8.1.1))(pg@8.23.1)(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(redux@4.2.1)(styled-components@6.6.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(supports-color@8.1.1)(ts-toolbelt@9.6.0)
       '@strapi/design-system': 2.3.1(@babel/runtime@7.29.15)(@codemirror/autocomplete@6.20.4)(@codemirror/language@6.13.1)(@codemirror/lint@6.9.8)(@codemirror/search@6.7.2)(@codemirror/theme-one-dark@6.1.3)(@strapi/icons@2.3.1(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(styled-components@6.6.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)))(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(codemirror@6.0.2)(date-fns@2.30.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(styled-components@6.6.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
@@ -11494,7 +11506,7 @@ snapshots:
       prop-types: 15.8.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-intl: 6.6.2(react@18.3.1)(typescript@5.9.3)
+      react-intl: 6.6.2(react@18.3.1)(typescript@7.0.2)
       react-query: 3.39.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-redux: 8.1.3(@types/react-dom@18.3.7(@types/react@18.3.31))(@types/react@18.3.31)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(redux@4.2.1)
       react-router-dom: 6.30.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -15698,6 +15710,22 @@ snapshots:
       tslib: 2.9.1
     optionalDependencies:
       typescript: 5.9.3
+
+  react-intl@6.6.2(react@18.3.1)(typescript@7.0.2):
+    dependencies:
+      '@formatjs/ecma402-abstract': 1.18.2
+      '@formatjs/icu-messageformat-parser': 2.7.6
+      '@formatjs/intl': 2.10.0(typescript@7.0.2)
+      '@formatjs/intl-displaynames': 6.6.6
+      '@formatjs/intl-listformat': 7.5.5
+      '@types/hoist-non-react-statics': 3.3.7(@types/react@18.3.31)
+      '@types/react': 18.3.31
+      hoist-non-react-statics: 3.3.2
+      intl-messageformat: 10.5.11
+      react: 18.3.1
+      tslib: 2.9.1
+    optionalDependencies:
+      typescript: 7.0.2
 
   react-is@16.13.1: {}
 
