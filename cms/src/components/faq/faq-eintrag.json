@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_faq_faq_eintrags",
+  "info": {
+    "displayName": "FAQ-Eintrag",
+    "icon": "bulletList"
+  },
+  "options": {},
+  "attributes": {
+    "frage": {
+      "type": "string",
+      "required": true
+    },
+    "antwort": {
+      "type": "blocks",
+      "required": true
+    }
+  },
+  "config": {}
+}
