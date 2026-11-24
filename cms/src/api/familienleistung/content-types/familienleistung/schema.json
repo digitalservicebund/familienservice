@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "familienleistungen",
+  "info": {
+    "singularName": "familienleistung",
+    "pluralName": "familienleistungen",
+    "displayName": "Familienleistung"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "lebenslagen": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::lebenslage.lebenslage",
+      "mappedBy": "familienleistungen"
+    },
+    "kurzbeschreibung": {
+      "type": "text"
+    },
+    "beschreibung": {
+      "type": "blocks"
+    },
+    "FAQ": {
+      "type": "component",
+      "component": "faq.faq-eintrag",
+      "repeatable": true
+    }
+  }
+}
