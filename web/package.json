@@ -1,5 +1,5 @@
 {
-  "name": "familienservice",
+  "name": "@familienservice/web",
   "version": "0.0.1",
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.4.2"
+    "astro": "^7.4.13"
   },
   "engines": {
     "node": "^26"

@@ -1,0 +1,217 @@
+name: Pipeline
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  INFRA_REPO: fs-infra
+
+jobs:
+  check-format-types-and-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm
+        # Reads the version from the "packageManager" field in package.json
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        id: install
+        run: pnpm install --frozen-lockfile
+
+      # The checks below run even if an earlier one fails, so all problems show up at once.
+      - name: Check format
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm format
+
+      - name: Check types
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm typecheck
+
+      - name: Lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm lint
+
+      - name: Build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm build
+
+  test-and-scan-with-sonarcloud:
+    name: Run tests and SonarQube scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # SonarQube needs full history for blame and new-code detection.
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        # Reads the version from the "packageManager" field in package.json
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage for SonarQube
+        run: pnpm test:coverage
+
+      # Dependabot PRs don't get access to SONAR_TOKEN, so the Sonar steps are skipped for them.
+      - name: Cache SonarQube packages
+        if: github.actor != 'dependabot[bot]'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: SonarQube Scan
+        if: github.actor != 'dependabot[bot]'
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: SonarQube Quality Gate check
+        if: github.actor != 'dependabot[bot]'
+        uses: SonarSource/sonarqube-quality-gate-action@7a5fffe8e523c40e0c740b6bc2712ab503e52efa # v1.2.1
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build-and-push-image:
+    name: Build and push image (${{ matrix.package }})
+    needs: [check-format-types-and-lint, test-and-scan-with-sonarcloud]
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for identity challenge with sigstore/fulcio
+      packages: write
+    strategy:
+      # Build the other image even if one fails. deploy-staging still waits for both.
+      fail-fast: false
+      matrix:
+        include:
+          - package: familienservice-web
+            dockerfile: web/Dockerfile
+          - package: familienservice-cms
+            dockerfile: cms/Dockerfile
+    env:
+      PACKAGE_NAME: ${{ matrix.package }}
+      IMAGE_NAME: digitalservicebund/${{ matrix.package }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          # The repository root for both images: the pnpm lockfile and workspace live there
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ghcr.io/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          # One cache per image, so the two builds don't overwrite each other's cache
+          cache-from: type=gha,scope=${{ matrix.package }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.package }}
+          sbom: true
+
+      - name: Generate cosign vulnerability scan record
+        # Third-party action, pin to commit SHA!
+        # See https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db
+        with:
+          image-ref: ghcr.io/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: "cosign-vuln"
+          output: "${{ env.PACKAGE_NAME }}-vulnerabilities.json"
+
+      - name: Upload cosign vulnerability scan record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: "${{ env.PACKAGE_NAME }}-vulnerabilities.json"
+          path: "${{ env.PACKAGE_NAME }}-vulnerabilities.json"
+          if-no-files-found: error
+
+      - name: Install cosign
+        # Third-party action, pin to commit SHA!
+        # See https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+        with:
+          cosign-release: "v2.6.0"
+
+      - name: Sign the published Docker image
+        run: cosign sign --yes ghcr.io/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+      - name: Attest the vulnerability scan
+        run: cosign attest --yes --replace --predicate ${{ env.PACKAGE_NAME }}-vulnerabilities.json --type vuln ghcr.io/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+      - name: Send failure to Slack
+        uses: digitalservicebund/notify-on-failure-gha@b8fdda76a38fa8e94cf623ebdd03e4570bc4ceb0
+        if: ${{ failure() }}
+        with:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: C0C4X5AEZBL
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment: staging
+    needs: build-and-push-image
+    steps:
+      - name: Deploy latest container images
+        uses: digitalservicebund/argocd-deploy@355b2c4b9d9191a5048c8307f13e1cfc05150387
+        with:
+          environment: staging
+          version: ${{ github.sha }}
+          # Image names under ghcr.io/digitalservicebund/, not the repo name. Both in one call, so the
+          # infra repo gets one commit for both image tags and ArgoCD syncs the app once.
+          deploying_repo: familienservice-web,familienservice-cms
+          infra_repo: ${{ env.INFRA_REPO }}
+          github_app_client_id: ${{ secrets.GITOPS_FAMILIENSERVICE_CLIENT_ID }}
+          github_app_private_key: ${{ secrets.GITOPS_FAMILIENSERVICE_APP_PRIVATE_KEY }}
+          app: familienservice-staging
+          argocd_auth_token: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          argocd_server: ${{ secrets.ARGOCD_SERVER_STACKIT }}

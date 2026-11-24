@@ -10,7 +10,7 @@ The content is a snapshot and is not updated automatically. The Content may be o
 
 1. The page list was taken from the sitemaps linked in [robots.txt](https://familienportal.de/robots.txt), limited to the sections `familienleistungen`, `lebenslagen` and `rechner-antraege`.
 2. The raw HTML of each page was downloaded.
-3. The HTML was converted to Markdown offline with [cheerio](https://cheerio.js.org) and [turndown](https://github.com/mixmark-io/turndown).
+3. The HTML was converted to Markdown.
 
 During the conversion:
 

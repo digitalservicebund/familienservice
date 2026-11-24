@@ -1,0 +1,26 @@
+# Local PostgreSQL for the Strapi CMS.
+# Start it with `pnpm start:cms:db` (repository root). It runs via `op run --env-file=.env`, so the
+# DATABASE_* variables from cms/.env reach Docker Compose with the 1Password references resolved.
+
+name: familienservice-cms
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:?DATABASE_NAME is not set, see cms/.env.example}
+      POSTGRES_USER: ${DATABASE_USERNAME:?DATABASE_USERNAME is not set, see cms/.env.example}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD is not set, see cms/.env.example}
+    ports:
+      # Only reachable from this machine
+      - "127.0.0.1:${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready --username="$$POSTGRES_USER" --dbname="$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

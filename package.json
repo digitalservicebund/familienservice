@@ -1,5 +1,5 @@
 {
-  "name": "fs-prototype",
+  "name": "familienservice",
   "version": "0.0.1",
   "private": true,
   "description": "Familienservice Prototype(s)",
@@ -7,28 +7,37 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digitalservicebund/fs-prototype.git"
+    "url": "git+https://github.com/digitalservicebund/familienservice.git"
   },
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter familienservice build",
-    "build:image": "docker build -t fs-prototype .",
+    "build": "pnpm run \"/^build:(cms|web)$/\"",
+    "build:cms": "pnpm --filter @familienservice/cms build",
+    "build:cms:image": "docker build -f cms/Dockerfile -t familienservice-cms .",
+    "build:web": "pnpm --filter @familienservice/web build",
+    "build:web:image": "docker build -f web/Dockerfile -t familienservice-web .",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "start": "pnpm --parallel --filter familienservice dev",
-    "start:image": "docker run --init --rm -p 3000:3000 fs-prototype",
+    "start": "pnpm start:cms:db && pnpm run \"/^start:(cms|web)$/\"",
+    "start:cms": "pnpm --filter @familienservice/cms dev",
+    "start:cms:db": "pnpm --filter @familienservice/cms db:up",
+    "start:web": "pnpm --filter @familienservice/web dev",
+    "start:web:image": "docker run --init --rm -p 3000:3000 familienservice-web",
+    "stop:cms:db": "pnpm --filter @familienservice/cms db:down",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "typecheck": "tsc -p familienservice"
+    "typecheck": "tsc -p web && pnpm --filter @familienservice/cms typecheck"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5",
-    "oxfmt": "^0.74.0",
-    "oxlint": "^1.89.0",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.1",
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.1"
   },
   "engines": {
     "node": "^26.12.1"
