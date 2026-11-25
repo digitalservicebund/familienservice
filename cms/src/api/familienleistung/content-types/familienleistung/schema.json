@@ -27,6 +27,12 @@
       "target": "api::lebenslage.lebenslage",
       "mappedBy": "familienleistungen"
     },
+    "leistungsdetails": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::leistungsdetail.leistungsdetail",
+      "mappedBy": "familienleistung"
+    },
     "kurzbeschreibung": {
       "type": "text"
     },

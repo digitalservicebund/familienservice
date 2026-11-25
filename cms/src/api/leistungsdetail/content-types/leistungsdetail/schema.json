@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "leistungsdetails",
+  "info": {
+    "singularName": "leistungsdetail",
+    "pluralName": "leistungsdetails",
+    "displayName": "Leistungsdetail",
+    "description": "Reine Datenquelle (BAFzA-Import), nicht redaktionell zu pflegen"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "bafzaId": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "familienleistung": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::familienleistung.familienleistung",
+      "inversedBy": "leistungsdetails"
+    },
+    "titel": {
+      "type": "string"
+    },
+    "quellbeschreibung": {
+      "type": "text",
+      "required": true,
+      "private": true
+    },
+    "kurzfassung": {
+      "type": "text"
+    },
+    "langfassung": {
+      "type": "text"
+    },
+    "rechtsgrundlagen": {
+      "type": "text"
+    },
+    "links": {
+      "type": "text"
+    },
+    "aktuelleInfos": {
+      "type": "text",
+      "private": true
+    },
+    "quelltitel": {
+      "type": "string",
+      "required": true
+    },
+    "quelle": {
+      "type": "enumeration",
+      "enum": ["BAFzA WDB"],
+      "required": true
+    },
+    "stand": {
+      "type": "date",
+      "required": true
+    },
+    "inhaltHash": {
+      "type": "string",
+      "required": true
+    }
+  }
+}
