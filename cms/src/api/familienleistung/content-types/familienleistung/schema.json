@@ -21,12 +21,6 @@
       "targetField": "name",
       "required": true
     },
-    "lebenslagen": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::lebenslage.lebenslage",
-      "mappedBy": "familienleistungen"
-    },
     "kurzbeschreibung": {
       "type": "text"
     },
