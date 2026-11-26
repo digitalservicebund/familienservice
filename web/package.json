@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@kern-ux/native": "^2.9.0",
     "astro": "^7.4.13"
   },
   "engines": {

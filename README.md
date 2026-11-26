@@ -8,7 +8,7 @@ A prototype of the Familienservice platform and further microfrontends that toge
 
 This repository is a [pnpm workspace](https://pnpm.io/workspaces).
 
-- `web/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and served via nginx from the Docker image `familienservice-web`, which the pipeline deploys to staging.
+- `web/`: The main application, an [Astro](https://astro.build) app. It is built as a static site and served via nginx from the Docker image `familienservice-web`, which the pipeline deploys to staging. It is styled with the [KERN UX](https://www.kern-ux.de) design system (`@kern-ux/native`, see the [component docs](https://www.kern-ux.de/komponenten)).
 - `cms/`: A [Strapi](https://strapi.io) CMS (spike) with a PostgreSQL. It has no content types yet and is not yet connected to the web app. The pipeline deploys its Docker image `familienservice-cms` to staging together with the web app.
 - `resources/familienportal/`: Content crawled from [familienportal.de](https://familienportal.de) as Markdown, used as the data basis for the prototype. See its [README](resources/familienportal/README.md) for details.
 
