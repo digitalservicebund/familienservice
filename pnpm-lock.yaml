@@ -224,6 +224,9 @@ importers:
 
   web:
     dependencies:
+      '@kern-ux/native':
+        specifier: ^2.9.0
+        version: 2.9.0
       astro:
         specifier: ^7.4.13
         version: 7.4.13(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.4)(yaml@2.9.1)
@@ -1491,6 +1494,9 @@ packages:
 
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
+
+  '@kern-ux/native@2.9.0':
+    resolution: {integrity: sha512-IFIwY/bp9oxAELzYy+duQXWKSPg4TPXWDZlga4JHzVySPKrGU6mboVnpyxVvTikq3BM+SPEenSMStWFzdt1jwg==}
 
   '@koa/cors@5.0.0':
     resolution: {integrity: sha512-x/iUDjcS90W69PryLDIMgFyV21YLTnG9zOpPXS7Bkt2b8AsY3zZsIpOLBkYr9fBcF3HbkKaER5hOBZLfpLgYNw==}
@@ -9484,6 +9490,8 @@ snapshots:
       tslib: 2.9.1
 
   '@juggle/resize-observer@3.4.0': {}
+
+  '@kern-ux/native@2.9.0': {}
 
   '@koa/cors@5.0.0':
     dependencies:
