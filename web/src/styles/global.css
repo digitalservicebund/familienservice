@@ -1,0 +1,5 @@
+/* App-wide global styles, loaded after KERN (see layouts/Layout.astro). */
+
+body {
+  margin: 0;
+}
