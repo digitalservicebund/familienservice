@@ -7,3 +7,5 @@ pre-commit:
     - name: Format
       run: pnpm format:fix
       stage_fixed: true
+    - name: Typecheck
+      run: pnpm typecheck
