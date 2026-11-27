@@ -3,6 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import serviceFactory, { computeHash } from "../src/api/leistungsdetail/services/leistungsdetail";
 
+// Only the custom service methods are under test: the factory returns them as-is, so
+// the real Strapi core (which needs a booted instance) is not loaded.
+vi.mock("@strapi/strapi", () => ({
+  factories: { createCoreService: (_uid: string, cfg: unknown) => cfg },
+}));
+
 type Row = { documentId: string; bafzaId: string; inhaltHash: string };
 
 const entry = (bafzaId: string, overrides: Record<string, unknown> = {}) => ({
@@ -10,7 +16,7 @@ const entry = (bafzaId: string, overrides: Record<string, unknown> = {}) => ({
   familienleistung: "Elternzeit",
   titel: "Auswirkungen",
   quelltitel: "Elternzeit: Auswirkungen",
-  quellbeschreibung: "Quelltext",
+  quellinhalt: "Quelltext",
   ...overrides,
 });
 
@@ -43,11 +49,19 @@ describe("importAll", () => {
     expect(result).toMatchObject({ ok: true, created: 2, updated: 0, unchanged: 0 });
     expect(transaction).toHaveBeenCalledOnce();
     expect(create).toHaveBeenCalledTimes(2);
-    expect(create.mock.calls[0][0].data).toMatchObject({ familienleistung: "L1", quelle: "BAFzA WDB", stand: "2026-11-20" });
+    expect(create.mock.calls[0][0].data).toMatchObject({
+      familienleistung: "L1",
+      quelle: "BAFzA WDB",
+      stand: "2026-11-20",
+    });
   });
 
   it("reports unchanged on re-import of the same content", async () => {
-    const existing = payload.eintraege.map((e, i) => ({ documentId: `D${i}`, bafzaId: e.bafzaId, inhaltHash: computeHash(e, "L1") }));
+    const existing = payload.eintraege.map((e, i) => ({
+      documentId: `D${i}`,
+      bafzaId: e.bafzaId,
+      inhaltHash: computeHash(e, "L1"),
+    }));
     const { service, create, update } = setup(existing);
     const result = await service.importAll(payload);
     expect(result).toMatchObject({ ok: true, created: 0, updated: 0, unchanged: 2 });
@@ -56,7 +70,9 @@ describe("importAll", () => {
   });
 
   it("updates an entry with the same bafzaId when content changed", async () => {
-    const { service, update, create } = setup([{ documentId: "D1", bafzaId: "1", inhaltHash: "old" }]);
+    const { service, update, create } = setup([
+      { documentId: "D1", bafzaId: "1", inhaltHash: "old" },
+    ]);
     const result = await service.importAll(payload);
     expect(result).toMatchObject({ ok: true, created: 1, updated: 1 });
     expect(update.mock.calls[0][0].documentId).toBe("D1");
@@ -67,9 +83,16 @@ describe("importAll", () => {
     payload.eintraege.push(entry("3", { familienleistung: "Unbekannt" }));
     const { service, strapi, create } = setup();
     const result = await service.importAll(payload);
-    expect(result).toMatchObject({ ok: true, created: 3, unassigned: 1, ids: { unassigned: ["3"] } });
+    expect(result).toMatchObject({
+      ok: true,
+      created: 3,
+      unassigned: 1,
+      ids: { unassigned: ["3"] },
+    });
     expect(create.mock.calls[2][0].data.familienleistung).toBeNull();
-    expect(strapi.log.warn).toHaveBeenCalledWith("bafzaId 3 konnte keiner Leistung zugeordnet werden");
+    expect(strapi.log.warn).toHaveBeenCalledWith(
+      "bafzaId 3 konnte keiner Leistung zugeordnet werden",
+    );
   });
 
   it("assigns the Leistung on a later import once it exists", async () => {
@@ -83,39 +106,51 @@ describe("importAll", () => {
 
   it("imports entries without titel and logs their bafzaId", async () => {
     const { service, strapi } = setup();
-    const result = await service.importAll({ stand: "2026-11-20", eintraege: [entry("4", { titel: undefined })] });
+    const result = await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("4", { titel: undefined })],
+    });
     expect(result).toMatchObject({ ok: true, created: 1, unassigned: 0 });
     expect(strapi.log.warn).toHaveBeenCalledWith("bafzaId 4 hat keinen Titel");
   });
 
   it("rejects duplicate bafzaIds and missing fields", async () => {
-    payload.eintraege = [entry("1"), entry("1"), entry("2", { titel: "" })];
+    payload.eintraege = [entry("1"), entry("1"), entry("2", { quelltitel: "" })];
     const { service, create } = setup();
     const result = await service.importAll(payload);
     expect(result.ok).toBe(false);
     expect(result).toMatchObject({
       errors: [
         { bafzaId: "1", code: "DUPLICATE_BAFZA_ID" },
-        { bafzaId: "2", code: "INVALID_ENTRY", field: "titel" },
+        { bafzaId: "2", code: "INVALID_ENTRY", field: "quelltitel" },
       ],
     });
     expect(create).not.toHaveBeenCalled();
   });
 
-  it.each([null, {}, { stand: "2026-11-20" }, { stand: "20.11.2026", eintraege: [] }])("rejects invalid payload %j", async (bad) => {
-    const { service } = setup();
-    expect(await service.importAll(bad)).toMatchObject({ ok: false, errors: [{ code: "INVALID_PAYLOAD" }] });
-  });
+  it.each([null, {}, { stand: "2026-11-20" }, { stand: "20.11.2026", eintraege: [] }])(
+    "rejects invalid payload %j",
+    async (bad) => {
+      const { service } = setup();
+      expect(await service.importAll(bad)).toMatchObject({
+        ok: false,
+        errors: [{ code: "INVALID_PAYLOAD" }],
+      });
+    },
+  );
 
-  it("stores quellbeschreibung and sets absent split sections to null", async () => {
+  it("stores quellinhalt and sets absent split sections to null", async () => {
     const { service, create } = setup();
-    const ok = await service.importAll({ stand: "2026-11-20", eintraege: [entry("1", { links: "" })] });
+    const ok = await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("1", { links: "" })],
+    });
     expect(ok).toMatchObject({ ok: true, created: 1 });
     expect(create.mock.calls[0][0].data).toMatchObject({
-      quellbeschreibung: "Quelltext",
+      quellinhalt: "Quelltext",
       kurzfassung: null,
       langfassung: null,
-      rechtsgrundlagen: null,
+      rechtsgrundlage: null,
       links: null,
       aktuelleInfos: null,
     });
@@ -123,41 +158,70 @@ describe("importAll", () => {
 
   it("accepts split sections when sent", async () => {
     const { service, create } = setup();
-    await service.importAll({ stand: "2026-11-20", eintraege: [entry("1", { kurzfassung: "Kurz", langfassung: "Lang" })] });
-    expect(create.mock.calls[0][0].data).toMatchObject({ kurzfassung: "Kurz", langfassung: "Lang" });
+    await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("1", { kurzfassung: "Kurz", langfassung: "Lang" })],
+    });
+    expect(create.mock.calls[0][0].data).toMatchObject({
+      kurzfassung: "Kurz",
+      langfassung: "Lang",
+    });
   });
 
   it("imports entries without Leistung unassigned, logs their bafzaId and does not abort", async () => {
     payload.eintraege.push(entry("3", { familienleistung: undefined, titel: null }));
     const { service, strapi, create } = setup();
     const result = await service.importAll(payload);
-    expect(result).toMatchObject({ ok: true, created: 3, unassigned: 1, ids: { unassigned: ["3"] } });
-    expect(create.mock.calls[2][0].data).toMatchObject({ bafzaId: "3", familienleistung: null, titel: null });
-    expect(strapi.log.warn).toHaveBeenCalledWith("bafzaId 3 konnte keiner Leistung zugeordnet werden");
+    expect(result).toMatchObject({
+      ok: true,
+      created: 3,
+      unassigned: 1,
+      ids: { unassigned: ["3"] },
+    });
+    expect(create.mock.calls[2][0].data).toMatchObject({
+      bafzaId: "3",
+      familienleistung: null,
+      titel: null,
+    });
+    expect(strapi.log.warn).toHaveBeenCalledWith(
+      "bafzaId 3 konnte keiner Leistung zugeordnet werden",
+    );
   });
 
   it("disconnects the Leistung when an existing entry becomes unassigned", async () => {
     const { service, update } = setup([{ documentId: "D3", bafzaId: "3", inhaltHash: "old" }]);
-    await service.importAll({ stand: "2026-11-20", eintraege: [entry("3", { familienleistung: undefined, titel: undefined })] });
+    await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("3", { familienleistung: undefined, titel: undefined })],
+    });
     expect(update.mock.calls[0][0].data.familienleistung).toBeNull();
   });
 
   it("rejects a bafzaId with unsafe characters (log injection)", async () => {
     const { service, strapi } = setup();
-    const bad = await service.importAll({ stand: "2026-11-20", eintraege: [entry("1\nFAKE LOG LINE")] });
+    const bad = await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("1\nFAKE LOG LINE")],
+    });
     expect(bad).toMatchObject({ ok: false, errors: [{ index: 0, field: "bafzaId" }] });
     expect(JSON.stringify(strapi.log.warn.mock.calls)).not.toContain("FAKE");
   });
 
-  it("requires quellbeschreibung", async () => {
+  it("requires quellinhalt", async () => {
     const { service } = setup();
-    const bad = await service.importAll({ stand: "2026-11-20", eintraege: [entry("2", { quellbeschreibung: "" })] });
-    expect(bad).toMatchObject({ ok: false, errors: [{ bafzaId: "2", field: "quellbeschreibung" }] });
+    const bad = await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("2", { quellinhalt: "" })],
+    });
+    expect(bad).toMatchObject({ ok: false, errors: [{ bafzaId: "2", field: "quellinhalt" }] });
   });
 
   it("rejects non-string optional sections", async () => {
     const { service } = setup();
-    const result = await service.importAll({ stand: "2026-11-20", eintraege: [entry("1", { links: ["a"] })] });
+    const result = await service.importAll({
+      stand: "2026-11-20",
+      eintraege: [entry("1", { links: ["a"] })],
+    });
     expect(result).toMatchObject({ ok: false, errors: [{ field: "links" }] });
   });
 
@@ -170,7 +234,7 @@ describe("importAll", () => {
   });
 
   it("logs only counters and IDs, never content", async () => {
-    payload.eintraege[0].quellbeschreibung = "GEHEIMER-INHALT";
+    payload.eintraege[0].quellinhalt = "GEHEIMER-INHALT";
     const { service, strapi } = setup();
     await service.importAll(payload);
     const logged = JSON.stringify([...strapi.log.info.mock.calls, ...strapi.log.warn.mock.calls]);

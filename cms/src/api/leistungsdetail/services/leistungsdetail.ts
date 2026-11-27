@@ -14,15 +14,17 @@ import type { Core } from "@strapi/strapi";
 
 const UID = "api::leistungsdetail.leistungsdetail";
 const LEISTUNG_UID = "api::familienleistung.familienleistung";
-const QUELLE = "BAFzA WDB";
+const QUELLE = "BAFzA WDB" as const;
 const CHUNK_SIZE = 1000;
 
-export type ImportErrorCode =
-  | "INVALID_PAYLOAD"
-  | "INVALID_ENTRY"
-  | "DUPLICATE_BAFZA_ID";
+export type ImportErrorCode = "INVALID_PAYLOAD" | "INVALID_ENTRY" | "DUPLICATE_BAFZA_ID";
 
-export type ImportError = { bafzaId?: string; index?: number; code: ImportErrorCode; field?: string };
+export type ImportError = {
+  bafzaId?: string;
+  index?: number;
+  code: ImportErrorCode;
+  field?: string;
+};
 
 export type ImportResult =
   | {
@@ -45,18 +47,26 @@ type Entry = {
   familienleistung: string | null;
   titel: string | null;
   quelltitel: string;
-  quellbeschreibung: string;
+  quellinhalt: string;
   kurzfassung: string | null;
   langfassung: string | null;
-  rechtsgrundlagen: string | null;
+  rechtsgrundlage: string | null;
   links: string | null;
   aktuelleInfos: string | null;
 };
 
-const REQUIRED_FIELDS = ["bafzaId", "quelltitel", "quellbeschreibung"] as const;
-// Split sections are optional: the pipeline may first send only quelltitel/quellbeschreibung
+const REQUIRED_FIELDS = ["bafzaId", "quelltitel", "quellinhalt"] as const;
+// Split sections are optional: the pipeline may first send only quelltitel/quellinhalt
 // familienleistung/titel: optional, a missing value is logged but never blocks the import
-const OPTIONAL_FIELDS = ["familienleistung", "titel", "kurzfassung", "langfassung", "rechtsgrundlagen", "links", "aktuelleInfos"] as const;
+const OPTIONAL_FIELDS = [
+  "familienleistung",
+  "titel",
+  "kurzfassung",
+  "langfassung",
+  "rechtsgrundlage",
+  "links",
+  "aktuelleInfos",
+] as const;
 
 // leistungId = resolved documentId (or null): when a missing Leistung is created in the CMS
 // later, the hash changes and the next import assigns it.
@@ -67,10 +77,10 @@ export function computeHash(e: Entry, leistungId: string | null): string {
         leistungId,
         e.titel,
         e.quelltitel,
-        e.quellbeschreibung,
+        e.quellinhalt,
         e.kurzfassung,
         e.langfassung,
-        e.rechtsgrundlagen,
+        e.rechtsgrundlage,
         e.links,
         e.aktuelleInfos,
       ]),
@@ -88,11 +98,17 @@ function chunk<T>(items: T[]): T[][] {
   return out;
 }
 
-function validate(payload: unknown): { stand: string; entries: Entry[] } | { errors: ImportError[] } {
+function validate(
+  payload: unknown,
+): { stand: string; entries: Entry[] } | { errors: ImportError[] } {
   if (!isRecord(payload) || !Array.isArray(payload.eintraege)) {
     return { errors: [{ code: "INVALID_PAYLOAD", field: "eintraege" }] };
   }
-  if (typeof payload.stand !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(payload.stand) || Number.isNaN(Date.parse(payload.stand))) {
+  if (
+    typeof payload.stand !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(payload.stand) ||
+    Number.isNaN(Date.parse(payload.stand))
+  ) {
     return { errors: [{ code: "INVALID_PAYLOAD", field: "stand" }] };
   }
 
@@ -118,7 +134,11 @@ function validate(payload: unknown): { stand: string; entries: Entry[] } | { err
     const optional: Record<string, string | null> = {};
     for (const field of OPTIONAL_FIELDS) {
       const value = raw[field];
-      if (value === undefined || value === null || (typeof value === "string" && value.trim() === "")) {
+      if (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      ) {
         optional[field] = null;
       } else if (typeof value === "string") {
         optional[field] = field === "familienleistung" || field === "titel" ? value.trim() : value;
@@ -141,7 +161,7 @@ function validate(payload: unknown): { stand: string; entries: Entry[] } | { err
     entries.push({
       bafzaId: bafzaId!,
       quelltitel: raw.quelltitel as string,
-      quellbeschreibung: raw.quellbeschreibung as string,
+      quellinhalt: raw.quellinhalt as string,
       ...(optional as Pick<Entry, (typeof OPTIONAL_FIELDS)[number]>),
     });
   });
@@ -162,13 +182,17 @@ export default factories.createCoreService(UID, ({ strapi }: { strapi: Core.Stra
   async importAll(payload: unknown): Promise<ImportResult> {
     const validated = validate(payload);
     if ("errors" in validated) {
-      strapi.log.warn(`Leistungsdetail import rejected: ${validated.errors.length} validation error(s)`);
+      strapi.log.warn(
+        `Leistungsdetail import rejected: ${validated.errors.length} validation error(s)`,
+      );
       return rejected(validated.errors);
     }
     const { stand, entries } = validated;
 
     // Resolve Familienleistungen by name (draft always exists, so drafts-only Leistungen resolve too)
-    const names = [...new Set(entries.flatMap((e) => (e.familienleistung ? [e.familienleistung] : [])))];
+    const names = [
+      ...new Set(entries.flatMap((e) => (e.familienleistung ? [e.familienleistung] : []))),
+    ];
     const leistungIdByName = new Map<string, string>();
     for (const part of chunk(names)) {
       const found = await strapi.documents(LEISTUNG_UID).findMany({
@@ -180,7 +204,8 @@ export default factories.createCoreService(UID, ({ strapi }: { strapi: Core.Stra
       for (const l of found) leistungIdByName.set(l.name as string, l.documentId);
     }
     // Missing or unknown Leistung: no relation, logged below, import continues
-    const leistungIdOf = (e: Entry) => (e.familienleistung ? (leistungIdByName.get(e.familienleistung) ?? null) : null);
+    const leistungIdOf = (e: Entry) =>
+      e.familienleistung ? (leistungIdByName.get(e.familienleistung) ?? null) : null;
 
     // Load existing entries for change detection
     const existing = new Map<string, { documentId: string; inhaltHash: string }>();
@@ -190,7 +215,11 @@ export default factories.createCoreService(UID, ({ strapi }: { strapi: Core.Stra
         fields: ["bafzaId", "inhaltHash"],
         limit: part.length,
       });
-      for (const d of found) existing.set(d.bafzaId as string, { documentId: d.documentId, inhaltHash: d.inhaltHash as string });
+      for (const d of found)
+        existing.set(d.bafzaId as string, {
+          documentId: d.documentId,
+          inhaltHash: d.inhaltHash as string,
+        });
     }
 
     const created: string[] = [];
@@ -213,10 +242,10 @@ export default factories.createCoreService(UID, ({ strapi }: { strapi: Core.Stra
           familienleistung: leistungId,
           titel: e.titel,
           quelltitel: e.quelltitel,
-          quellbeschreibung: e.quellbeschreibung,
+          quellinhalt: e.quellinhalt,
           kurzfassung: e.kurzfassung,
           langfassung: e.langfassung,
-          rechtsgrundlagen: e.rechtsgrundlagen,
+          rechtsgrundlage: e.rechtsgrundlage,
           links: e.links,
           aktuelleInfos: e.aktuelleInfos,
           quelle: QUELLE,
@@ -235,7 +264,8 @@ export default factories.createCoreService(UID, ({ strapi }: { strapi: Core.Stra
 
     // Not errors: logged by ID only (no names/content), the import goes on
     const unassigned = entries.filter((e) => leistungIdOf(e) === null).map((e) => e.bafzaId);
-    for (const id of unassigned) strapi.log.warn(`bafzaId ${id} konnte keiner Leistung zugeordnet werden`);
+    for (const id of unassigned)
+      strapi.log.warn(`bafzaId ${id} konnte keiner Leistung zugeordnet werden`);
     for (const e of entries) {
       if (e.titel === null) strapi.log.warn(`bafzaId ${e.bafzaId} hat keinen Titel`);
     }

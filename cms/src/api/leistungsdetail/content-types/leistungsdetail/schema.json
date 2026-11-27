@@ -23,12 +23,20 @@
       "target": "api::familienleistung.familienleistung",
       "inversedBy": "leistungsdetails"
     },
+    "quelltitel": {
+      "type": "string",
+      "required": true
+    },
+    "quellinhalt": {
+      "type": "text",
+      "required": true,
+      "private": true
+    },
     "titel": {
       "type": "string"
     },
-    "quellbeschreibung": {
+    "aktuelleInfos": {
       "type": "text",
-      "required": true,
       "private": true
     },
     "kurzfassung": {
@@ -37,19 +45,11 @@
     "langfassung": {
       "type": "text"
     },
-    "rechtsgrundlagen": {
+    "rechtsgrundlage": {
       "type": "text"
     },
     "links": {
       "type": "text"
-    },
-    "aktuelleInfos": {
-      "type": "text",
-      "private": true
-    },
-    "quelltitel": {
-      "type": "string",
-      "required": true
     },
     "quelle": {
       "type": "enumeration",
