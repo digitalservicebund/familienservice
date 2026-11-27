@@ -56,7 +56,7 @@ Changes compared to the generated project:
 | `src/admin/`           | Admin panel customization. The `*.example.*` files show the options (e.g. German admin UI).            |
 | `database/migrations/` | Optional custom DB migrations. Strapi creates and alters tables from the schemas itself.               |
 | `public/uploads/`      | Uploaded media (local provider). Not committed.                                                        |
-| `types/generated/`     | TypeScript types Strapi generates from the schemas on `develop`. Not committed.                        |
+| `types/generated/`     | TypeScript types Strapi generates from the schemas on `develop`. Committed, see below.                 |
 | `Dockerfile`           | Production image, see below.                                                                           |
 
 ### Configuration and secrets: `.env.example`, `.env` and 1Password
@@ -82,6 +82,16 @@ PostgreSQL applies name, user and password only when the volume is initialized. 
 ```sh
 docker compose -f cms/docker-compose.yaml down -v
 ```
+
+### Generated types: `types/generated/`
+
+`strapi develop` generates TypeScript types for all content types and components into `types/generated/` (on start and whenever a schema changes). Code that reads or writes content with the Document Service (`strapi.documents(...)`) is type-checked against them.
+
+The types are committed, because `strapi build` and `tsc` (CI, Docker image) only compile and do not generate them: generating needs a fully registered Strapi instance, including the secrets.
+
+- After changing a schema (by hand or in the Content-Type Builder), start `pnpm start:cms` once and commit the updated `types/generated/` together with the schema.
+- After a Strapi update, regenerate them the same way.
+- They are excluded from oxfmt and oxlint, so Strapi can overwrite them as-is.
 
 ## Updating Strapi
 

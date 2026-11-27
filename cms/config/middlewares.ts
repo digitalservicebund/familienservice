@@ -7,7 +7,8 @@ const config: Core.Config.Middlewares = [
   "strapi::cors",
   "strapi::poweredBy",
   "strapi::query",
-  "strapi::body",
+  // The BAFzA import posts a whole dump in one request (default limit is 1 MB)
+  { name: "strapi::body", config: { jsonLimit: "20mb" } },
   "strapi::session",
   "strapi::favicon",
   "strapi::public",
